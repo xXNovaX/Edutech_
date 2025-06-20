@@ -236,25 +236,37 @@ function mostrarFormularioEvaluacion(cursoId) {
         }
 
         // Tabla de estudiantes
+        // Tabla de estudiantes
         html += `<table border="1"><tr><th>Estudiante</th>`;
         for (let i = 0; i < cantidad; i++) html += `<th>Nota ${i + 1}</th>`;
         html += `<th>Nota Final</th></tr>`;
 
-
         estudiantes.forEach(est => {
-          html += `<tr><td>${est.nombre}</td>`;
-          for (let i = 0; i < cantidad; i++) {
-          html += `<td><input type="number" step="0.1" min="1" max="7" name="nota-${est.id}-${i}" required oninput="calcularNotaFinal('${est.id}', ${cantidad})" /></td>`;
+        html += `<tr><td>${est.nombre}</td>`;
+        for (let i = 0; i < cantidad; i++) {
+          html += `<td><input type="number" step="0.1" min="1" max="7" name="nota-${est.id}-${i}" required /></td>`;
+        }
+        html += `<td><span id="notaFinal-${est.id}">-</span></td></tr>`;
+      });
 
-          }
-          html += `<td><span id="notaFinal-${est.id}">-</span></td></tr>`;
-        });
 
         html += `</table><br/>
           <button type="submit" class="btn-primary">Guardar Evaluaciones</button>
         </form>`;
 
+        
+        
+        
+        
         formDiv.innerHTML = html;
+        // Activar el cálculo dinámico de nota final
+          estudiantes.forEach(est => {
+            for (let i = 0; i < cantidad; i++) {
+              const input = document.querySelector(`[name="nota-${est.id}-${i}"]`);
+              input.addEventListener("input", () => calcularNotaFinal(est.id, cantidad));
+            }
+          });
+
 
         // Evento para enviar las evaluaciones
         document.getElementById('evaluacionForm').addEventListener('submit', e => {
@@ -274,11 +286,13 @@ function mostrarFormularioEvaluacion(cursoId) {
             ponderaciones.forEach((pond, i) => {
               const nota = parseFloat(document.querySelector(`[name="nota-${est.id}-${i}"]`).value);
               evaluaciones.push({
-                estudianteId: est.id,
-                cursoId: cursoId,
-                nota: nota,
-                ponderacion: pond
-              });
+              estudiante: { id: est.id },
+              curso: { id: cursoId },
+              nota: nota,
+              ponderacion: pond,
+              fecha: new Date().toISOString().split('T')[0]
+            });
+
             });
             // Muestra nota final en consola (opcional, útil para pruebas)
             console.log(`Nota final para ${est.nombre}: ${notaFinal.toFixed(2)}`);
