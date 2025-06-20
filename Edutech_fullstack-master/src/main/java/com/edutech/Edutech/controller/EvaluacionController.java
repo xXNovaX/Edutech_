@@ -13,6 +13,21 @@ import java.util.List;
 @RequestMapping("/api/evaluaciones")
 public class EvaluacionController {
 
+
+    @Autowired
+    private EvaluacionService evaluacionService;
+
+    @PostMapping("/lote")
+    public ResponseEntity<?> guardarEvaluaciones(@RequestBody List<Evaluacion> evaluaciones) {
+        try {
+            service.guardarEvaluaciones(evaluaciones);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error al guardar evaluaciones");
+        }
+    }
+
+
     // Inyecta el servicio que maneja la lógica y acceso a datos para evaluaciones
     @Autowired
     private EvaluacionService service;

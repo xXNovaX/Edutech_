@@ -1,7 +1,9 @@
 package com.edutech.Edutech.controller;
 
 import com.edutech.Edutech.model.Estudiante;
+import com.edutech.Edutech.model.Evaluacion;
 import com.edutech.Edutech.service.EstudianteService;
+import com.edutech.Edutech.service.EvaluacionService;
 import com.edutech.Edutech.service.InscripcionService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,10 +16,16 @@ import java.util.Optional;
 
 // Marca esta clase como un controlador REST que responde en la ruta /api/estudiantes
 @RestController
+
+
 @RequestMapping("/api/estudiantes")
 // Permite solicitudes de cualquier origen (CORS) para evitar bloqueos en frontend separados
 @CrossOrigin(origins = "*")
 public class EstudianteController {
+
+
+
+    
 
     // Inyección del servicio para manejar la lógica y datos de estudiantes
     @Autowired
@@ -108,6 +116,11 @@ public ResponseEntity<List<Estudiante>> getEstudiantesPorCurso(@PathVariable Lon
             return ResponseEntity.status(401).body("Correo o contraseña incorrectos");
         }
     }
+
+
+
+
+
 
     // POST /api/estudiantes/crear-docente?adminCorreo=...
     // Endpoint para crear un docente, solo accesible si el correo de quien hace la petición es de un admin

@@ -69,6 +69,8 @@ function mostrarMisCursos(docenteId) {
               <p>${curso.descripcion}</p>
               <button class="btnEliminar" data-id="${curso.id}">Eliminar</button>
               <button class="btnVerEstudiantes" data-id="${curso.id}">Ver estudiantes</button>
+              <button class="btnEvaluar" data-id="${curso.id}">Evaluar</button>
+
             </div>`;
         });
         html += `</div>`;
@@ -94,6 +96,13 @@ function mostrarMisCursos(docenteId) {
           }
         });
       });
+      document.querySelectorAll('.btnEvaluar').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const cursoId = btn.getAttribute('data-id');
+            mostrarFormularioEvaluacion(cursoId);
+  });
+});
+
     })
     .catch(() => {
       contenidoPrincipal.innerHTML = `<p>Error cargando cursos. Intenta de nuevo.</p>`;
@@ -190,3 +199,123 @@ function verEstudiantes(cursoId) {
       contenidoPrincipal.innerHTML = `<p>Error al cargar estudiantes, intenta nuevamente.</p>`;
     });
 }
+
+function mostrarFormularioEvaluacion(cursoId) {
+  let cantidad = 0;
+
+  fetch(`http://localhost:8080/api/inscripciones/curso/${cursoId}/estudiantes`)
+    .then(res => res.json())
+    .then(estudiantes => {
+      if (estudiantes.length === 0) {
+        contenidoPrincipal.innerHTML = `<p>No hay estudiantes inscritos en este curso.</p>`;
+        return;
+      }
+
+      // Paso 1: pedir al docente cuántas notas va a poner
+      contenidoPrincipal.innerHTML = `
+        <h3>Evaluar Estudiantes</h3>
+        <label for="cantidadNotas">¿Cuántas notas desea ingresar?</label>
+        <input type="number" id="cantidadNotas" min="1" max="10" value="1" />
+        <button id="generarNotas">Generar Formulario</button>
+        <div id="formEvaluacion"></div>
+      `;
+
+      document.getElementById('generarNotas').addEventListener('click', () => {
+        const cantidad = parseInt(document.getElementById('cantidadNotas').value);
+        if (isNaN(cantidad) || cantidad < 1) return;
+
+        const formDiv = document.getElementById('formEvaluacion');
+        let html = `<form id="evaluacionForm">`;
+
+        // Generar inputs de porcentaje por cada nota
+        for (let i = 0; i < cantidad; i++) {
+          html += `
+            <label>Ponderación Nota ${i + 1} (%)</label>
+            <input type="number" name="ponderaciones" min="1" max="100" required /><br/>
+          `;
+        }
+
+        // Tabla de estudiantes
+        html += `<table border="1"><tr><th>Estudiante</th>`;
+        for (let i = 0; i < cantidad; i++) html += `<th>Nota ${i + 1}</th>`;
+        html += `<th>Nota Final</th></tr>`;
+
+
+        estudiantes.forEach(est => {
+          html += `<tr><td>${est.nombre}</td>`;
+          for (let i = 0; i < cantidad; i++) {
+          html += `<td><input type="number" step="0.1" min="1" max="7" name="nota-${est.id}-${i}" required oninput="calcularNotaFinal('${est.id}', ${cantidad})" /></td>`;
+
+          }
+          html += `<td><span id="notaFinal-${est.id}">-</span></td></tr>`;
+        });
+
+        html += `</table><br/>
+          <button type="submit" class="btn-primary">Guardar Evaluaciones</button>
+        </form>`;
+
+        formDiv.innerHTML = html;
+
+        // Evento para enviar las evaluaciones
+        document.getElementById('evaluacionForm').addEventListener('submit', e => {
+          e.preventDefault();
+
+          const ponderaciones = [...document.getElementsByName('ponderaciones')].map(input => parseFloat(input.value));
+          const suma = ponderaciones.reduce((a, b) => a + b, 0);
+
+          if (suma !== 100) {
+            alert("Las ponderaciones deben sumar 100%");
+            return;
+          }
+
+          const evaluaciones = [];
+          estudiantes.forEach(est => {
+            let notaFinal = 0;
+            ponderaciones.forEach((pond, i) => {
+              const nota = parseFloat(document.querySelector(`[name="nota-${est.id}-${i}"]`).value);
+              evaluaciones.push({
+                estudianteId: est.id,
+                cursoId: cursoId,
+                nota: nota,
+                ponderacion: pond
+              });
+            });
+            // Muestra nota final en consola (opcional, útil para pruebas)
+            console.log(`Nota final para ${est.nombre}: ${notaFinal.toFixed(2)}`);
+          });
+
+          // POST al backend
+          fetch("http://localhost:8080/api/evaluaciones/lote", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(evaluaciones)
+          })
+          .then(res => {
+            if (!res.ok) throw new Error("Error guardando evaluaciones");
+            alert("Notas guardadas correctamente");
+            mostrarMisCursos(JSON.parse(localStorage.getItem('usuario')).id);
+          })
+          .catch(() => alert("Error al guardar las evaluaciones."));
+        });
+      });
+    });
+
+
+
+}
+
+function calcularNotaFinal(estudianteId, cantidadNotas) {
+    const ponderacionesInputs = document.getElementsByName("ponderaciones");
+    const ponderaciones = [...ponderacionesInputs].map(i => parseFloat(i.value) || 0);
+
+    let total = 0;
+    for (let i = 0; i < cantidadNotas; i++) {
+      const notaInput = document.querySelector(`[name="nota-${estudianteId}-${i}"]`);
+      const nota = parseFloat(notaInput.value) || 0;
+      total += nota * (ponderaciones[i] / 100);
+    }
+
+    const finalSpan = document.getElementById(`notaFinal-${estudianteId}`);
+    finalSpan.textContent = total.toFixed(2);
+}
+

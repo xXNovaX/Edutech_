@@ -31,16 +31,17 @@ public class EvaluacionService {
         return repo.save(evaluacion);
     }
 
-    // Actualiza los datos de una evaluación existente si se encuentra por id
-    public Optional<Evaluacion> actualizar(Long id, Evaluacion evaluacion) {
-        return repo.findById(id).map(e -> {
-            e.setIdCurso(evaluacion.getIdCurso());
-            e.setIdEstudiante(evaluacion.getIdEstudiante());
-            e.setNota(evaluacion.getNota());
-            e.setFecha(evaluacion.getFecha());
-            return repo.save(e);
-        });
-    }
+   public Optional<Evaluacion> actualizar(Long id, Evaluacion evaluacion) {
+    return repo.findById(id).map(e -> {
+        e.setCurso(evaluacion.getCurso()); // cambia esto
+        e.setEstudiante(evaluacion.getEstudiante()); // también debes usar el objeto
+        e.setNota(evaluacion.getNota());
+        e.setFecha(evaluacion.getFecha());
+        e.setPonderacion(evaluacion.getPonderacion());
+        return repo.save(e);
+    });
+}
+
 
     // Elimina una evaluación si existe, devuelve true si se eliminó
     public boolean eliminar(Long id) {
@@ -50,4 +51,12 @@ public class EvaluacionService {
         }
         return false;
     }
+
+    public void guardarEvaluaciones(List<Evaluacion> evaluaciones) {
+    for (Evaluacion e : evaluaciones) {
+        repo.save(e);  // Guarda o actualiza cada evaluación
+    }
 }
+
+}
+
