@@ -25,6 +25,9 @@ loginForm.addEventListener('submit', async (e) => {
 
       // Guardar información del usuario en localStorage para sesión
       localStorage.setItem('usuario', JSON.stringify(usuario));
+      // Guardar también id y rol por separado
+      localStorage.setItem("usuarioId", usuario.id);
+      localStorage.setItem("usuarioRol", usuario.rol);
 
       // Redirigir al usuario según su rol dentro de la aplicación
       if (usuario.rol === 'DOCENTE') {

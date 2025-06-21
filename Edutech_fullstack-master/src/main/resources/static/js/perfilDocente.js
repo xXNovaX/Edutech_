@@ -335,7 +335,7 @@ function mostrarFormularioEvaluacion(cursoId) {
         estudiantes.forEach(est => {
         html += `<tr><td>${est.nombre}</td>`;
         for (let i = 0; i < cantidad; i++) {
-          html += `<td><input type="number" step="0.1" min="1" max="7" name="nota-${est.id}-${i}" required /></td>`;
+          html += `<td><input type="number" step="0.1" min="1" max="7" name="nota-${est.id}-${i}" /></td>`;
         }
         html += `<td><span id="notaFinal-${est.id}">-</span></td></tr>`;
       });
@@ -375,12 +375,14 @@ function mostrarFormularioEvaluacion(cursoId) {
           estudiantes.forEach(est => {
             let notaFinal = 0;
             ponderaciones.forEach((pond, i) => {
-              const nota = parseFloat(document.querySelector(`[name="nota-${est.id}-${i}"]`).value);
-              const titulo = document.querySelector(`[name="titulo-${i}"]`).value;
-              
-              //push OJO <-------------------
-              
-              evaluaciones.push({
+            const input = document.querySelector(`[name="nota-${est.id}-${i}"]`);
+            const notaStr = input.value.trim();
+            if (notaStr === "") return; // 👉 ignorar si está vacío
+
+            const nota = parseFloat(notaStr);
+            const titulo = document.querySelector(`[name="titulo-${i}"]`).value;
+
+            evaluaciones.push({
               estudiante: { id: est.id },
               curso: { id: cursoId },
               nota: nota,
@@ -388,8 +390,8 @@ function mostrarFormularioEvaluacion(cursoId) {
               fecha: new Date().toISOString().split('T')[0],
               titulo: titulo
             });
+          });
 
-            });
             // Muestra nota final en consola (opcional, útil para pruebas)
             console.log(`Nota final para ${est.nombre}: ${notaFinal.toFixed(2)}`);
           });
@@ -645,7 +647,29 @@ function mostrarNotasCurso(cursoId) {
             return;
           }
 
+          /*let html = `<h3>Evaluaciones Registradas</h3>`;
+          html += `<table border="1"><tr>
+            <th style="display:none;">ID</th>
+            <th>Estudiante</th>
+            <th>Nota</th>
+            <th>Ponderación (%)</th>
+            <th>Fecha</th>
+            <th>Título</th>
+            <th>Eliminar</th>
+          </tr>`;*/
+          //cambie esto ojo es para poder seleccionar un alumno de un menu seleccionable
           let html = `<h3>Evaluaciones Registradas</h3>`;
+
+          // Paso 1: Agregar selector de alumno y div para nota final
+          html += `
+            <label for="selectAlumno">Filtrar por alumno:</label>
+            <select id="selectAlumno">
+              <option value="">Todos</option>
+            </select>
+            <div id="notaFinalBox" style="margin-top: 10px; font-weight: bold;"></div>
+          `;
+
+          // Luego sigue con la tabla
           html += `<table border="1"><tr>
             <th style="display:none;">ID</th>
             <th>Estudiante</th>
@@ -655,6 +679,7 @@ function mostrarNotasCurso(cursoId) {
             <th>Título</th>
             <th>Eliminar</th>
           </tr>`;
+
 
           /*// ✅ Aquí va el forEach completo
           evaluaciones.forEach(ev => {
@@ -668,6 +693,14 @@ function mostrarNotasCurso(cursoId) {
               <td><button onclick="eliminarEvaluacion(${ev.id})" style="color:red;">❌</button></td>
             </tr>`;
           });*/
+
+
+          evaluaciones.sort((a, b) => {
+          const nombreA = (a.estudianteNombre || "").toLowerCase();
+          const nombreB = (b.estudianteNombre || "").toLowerCase();
+          return nombreA.localeCompare(nombreB);
+        });
+
 
           evaluaciones.forEach(ev => {
           html += `<tr
@@ -683,13 +716,94 @@ function mostrarNotasCurso(cursoId) {
           </tr>`;
         });
 
+          /*html += `
+          <label for="selectAlumno"><strong>Alumno:</strong></label>
+          <select id="selectAlumno">
+            <option value="">-- Seleccionar --</option>
+          </select>
+          <span style="margin-left: 20px;"><strong>Nota Final:</strong> <span id="notaFinal">-</span></span>
+          <br/><br/>
+        `;*/
+
 
 
           // ✅ Este cierre debe ir FUERA del forEach
           html += `</table><br/>
-            <button id="btnGuardarCambios" class="btn-primary">Guardar Cambios</button>`;
+          <button id="btnGuardarCambios" class="btn-primary">Guardar Cambios</button>
+          <div id="resultadoNotaFinal" style="margin-top: 15px;">
+            <strong>Nota Final Alumno Seleccionado: <span id="notaFinal">-</span></strong>
+          </div>`;
 
           contenidoPrincipal.innerHTML = html;
+
+
+          // Paso 2: Llenar el selector con estudiantes únicos
+          const selectAlumno = document.getElementById("selectAlumno");
+          const estudiantesUnicos = [...new Set(evaluaciones.map(ev => `${ev.estudianteId}|${ev.estudianteNombre}`))];
+
+          estudiantesUnicos.forEach(est => {
+            const [id, nombre] = est.split("|");
+            const option = document.createElement("option");
+            option.value = id;
+            option.textContent = nombre || "Desconocido";
+            selectAlumno.appendChild(option);
+          });
+
+                    // Paso 3: Evento para filtrar por estudiante
+          /*selectAlumno.addEventListener("change", () => {
+            const idSeleccionado = selectAlumno.value;
+            const filas = document.querySelectorAll("table tr[data-estudiante-id]");
+
+            filas.forEach(fila => {
+              const idEst = fila.getAttribute("data-estudiante-id");
+              fila.style.display = idEst === idSeleccionado ? "" : "none";
+            });
+
+            // Calcular y mostrar nota final
+            const evaluacionesFiltradas = evaluaciones.filter(ev => ev.estudianteId == idSeleccionado);
+            let suma = 0;
+            let totalPonderacion = 0;
+            evaluacionesFiltradas.forEach(ev => {
+              suma += ev.nota * (ev.ponderacion / 100);
+              totalPonderacion += ev.ponderacion;
+            });
+
+            const notaFinal = totalPonderacion > 0 ? suma.toFixed(2) : "-";
+            document.getElementById("notaFinal").textContent = notaFinal;
+          });*/
+
+          // Paso 3: Evento para filtrar por estudiante
+          selectAlumno.addEventListener("change", () => {
+            const idSeleccionado = selectAlumno.value;
+            const filas = document.querySelectorAll("table tr[data-estudiante-id]");
+
+            // Mostrar u ocultar filas según el alumno seleccionado
+            filas.forEach(fila => {
+              const idEst = fila.getAttribute("data-estudiante-id");
+              fila.style.display = idSeleccionado === "" || idEst === idSeleccionado ? "" : "none";
+            });
+
+            // Si se seleccionó "Todos", no calculamos nota final
+            if (idSeleccionado === "") {
+              document.getElementById("notaFinal").textContent = "-";
+              return;
+            }
+
+            // Calcular y mostrar la nota final del alumno seleccionado
+            const evaluacionesFiltradas = evaluaciones.filter(ev => ev.estudianteId == idSeleccionado);
+            let suma = 0;
+            let totalPonderacion = 0;
+            evaluacionesFiltradas.forEach(ev => {
+              suma += ev.nota * (ev.ponderacion / 100);
+              totalPonderacion += ev.ponderacion;
+            });
+
+            const notaFinal = totalPonderacion > 0 ? suma.toFixed(2) : "-";
+            document.getElementById("notaFinal").textContent = notaFinal;
+          });
+
+
+
 
           // Evento botón
           document.getElementById("btnGuardarCambios").addEventListener("click", guardarCambiosEvaluaciones);
@@ -930,3 +1044,14 @@ function guardarCambiosEvaluaciones() {
 }
 
 
+window.addEventListener("DOMContentLoaded", () => {
+  // Aquí puedes ponerlo sin problemas:
+  document.getElementById("misCursos").addEventListener("click", () => {
+    const usuario = JSON.parse(localStorage.getItem("usuario"));
+    if (usuario && usuario.id) {
+      mostrarMisCursos(usuario.id);
+    } else {
+      alert("Error: No se pudo obtener el ID del usuario.");
+    }
+  });
+});
