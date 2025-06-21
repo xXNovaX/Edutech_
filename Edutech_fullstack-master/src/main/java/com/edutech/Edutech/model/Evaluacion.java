@@ -3,6 +3,8 @@ package com.edutech.Edutech.model;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 @Entity
 public class Evaluacion {
 
@@ -10,9 +12,11 @@ public class Evaluacion {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String titulo;
 
     @ManyToOne
     @JoinColumn(name = "id_estudiante")
+    @JsonIgnoreProperties({"evaluaciones", "otrosCamposInnecesarios"})
     private Estudiante estudiante;
 
     @ManyToOne
@@ -45,4 +49,14 @@ public class Evaluacion {
 
     public LocalDate getFecha() { return fecha; }
     public void setFecha(LocalDate fecha) { this.fecha = fecha; }
+
+
+    public String getTitulo() {
+    return titulo;
+}
+
+public void setTitulo(String titulo) {
+    this.titulo = titulo;
+}
+
 }

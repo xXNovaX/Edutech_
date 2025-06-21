@@ -1,5 +1,6 @@
 package com.edutech.Edutech.controller;
 
+import com.edutech.Edutech.dto.EvaluacionConEstudianteDTO;
 import com.edutech.Edutech.model.Evaluacion;
 import com.edutech.Edutech.service.EvaluacionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +18,7 @@ public class EvaluacionController {
     @Autowired
     private EvaluacionService evaluacionService;
 
-    @PostMapping("/lote")
+    /*@PostMapping("/lote")
     public ResponseEntity<?> guardarEvaluaciones(@RequestBody List<Evaluacion> evaluaciones) {
         try {
             service.guardarEvaluaciones(evaluaciones);
@@ -25,7 +26,23 @@ public class EvaluacionController {
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Error al guardar evaluaciones");
         }
+    }*/
+    @PostMapping("/lote")
+    public ResponseEntity<?> guardarEvaluaciones(@RequestBody List<Evaluacion> evaluaciones) {
+        try {
+            for (Evaluacion eval : evaluaciones) {
+                if (eval.getCurso() == null || eval.getCurso().getId() == null ||
+                    eval.getEstudiante() == null || eval.getEstudiante().getId() == null) {
+                    return ResponseEntity.badRequest().body("Faltan datos de curso o estudiante");
+                }
+            }
+            service.guardarEvaluaciones(evaluaciones);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error al guardar evaluaciones");
+        }
     }
+
 
 
     // Inyecta el servicio que maneja la lógica y acceso a datos para evaluaciones
@@ -48,6 +65,17 @@ public class EvaluacionController {
                 .orElse(ResponseEntity.notFound().build()); // si no, responde 404 Not Found
     }
 
+/*@GetMapping("/curso/{idCurso}")
+public ResponseEntity<List<Evaluacion>> obtenerEvaluacionesPorCurso(@PathVariable Long idCurso) {
+    try {
+        List<Evaluacion> evaluaciones = service.obtenerPorCurso(idCurso);
+        return ResponseEntity.ok(evaluaciones);
+    } catch (Exception e) {
+        return ResponseEntity.status(500).build();
+    }
+}*/
+
+
     // POST /api/evaluaciones
     // Crea una nueva evaluación con los datos enviados en el cuerpo JSON
     @PostMapping
@@ -57,7 +85,7 @@ public class EvaluacionController {
 
     // PUT /api/evaluaciones/{id}
     // Actualiza una evaluación existente identificado por id con los datos del cuerpo JSON
-    @PutMapping("/{id}")
+    @PutMapping("/uno/{id}")
     public ResponseEntity<Evaluacion> actualizar(@PathVariable Long id, @RequestBody Evaluacion evaluacion) {
         return service.actualizar(id, evaluacion)
                 .map(ResponseEntity::ok) // si actualiza correctamente, devuelve OK con la evaluación actualizada
@@ -73,4 +101,84 @@ public class EvaluacionController {
         }
         return ResponseEntity.notFound().build();
     }
+
+
+    /*@PutMapping("/actualizar")
+    public ResponseEntity<?> actualizarEvaluaciones(@RequestBody List<Evaluacion> evaluaciones) {
+        try {
+            for (Evaluacion evaluacion : evaluaciones) {
+                if (evaluacion.getId() != null) {
+                    service.actualizar(evaluacion.getId(), evaluacion);
+                }
+            }
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error al actualizar evaluaciones");
+        }
+    }*/
+
+    /*@PutMapping("/actualizar")
+    public ResponseEntity<?> actualizarEvaluaciones(@RequestBody List<Evaluacion> evaluaciones) {
+        try {
+            service.actualizarEvaluacionesEnLote(evaluaciones);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error al actualizar evaluaciones");
+        }
+    }*/
+
+
+    /*@GetMapping("/curso/{idCurso}")
+    public ResponseEntity<List<EvaluacionConEstudianteDTO>> obtenerEvaluacionesConNombre(@PathVariable Long idCurso) {
+        List<EvaluacionConEstudianteDTO> lista = service.obtenerEvaluacionesPorCurso(idCurso); // ✅ nombre correcto
+        return ResponseEntity.ok(lista);
+    }*/
+
+    @GetMapping("/curso/{idCurso}")
+    public ResponseEntity<List<EvaluacionConEstudianteDTO>> obtenerEvaluacionesPorCurso(@PathVariable Long idCurso) {
+        List<EvaluacionConEstudianteDTO> lista = service.obtenerEvaluacionesPorCurso(idCurso);
+        return ResponseEntity.ok(lista);
+    }
+
+
+    /*@PutMapping("/actualizar")
+    public ResponseEntity<?> actualizarEvaluaciones(@RequestBody List<Evaluacion> evaluaciones) {
+        try {
+            for (Evaluacion evaluacion : evaluaciones) {
+                System.out.println("Recibido: " + evaluacion.getId() + " - " + evaluacion.getTitulo());
+                if (evaluacion.getId() != null) {
+                    service.actualizar(evaluacion.getId(), evaluacion);
+                }
+            }
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            e.printStackTrace(); // Muestra el error en consola
+            return ResponseEntity.status(500).body("Error al actualizar evaluaciones");
+        }
+    }*/
+
+    @PutMapping("/actualizar")
+    public ResponseEntity<?> actualizarEvaluaciones(@RequestBody List<Evaluacion> evaluaciones) {
+        try {
+            System.out.println("Recibido en backend:");
+            evaluaciones.forEach(ev -> System.out.println(
+                "ID: " + ev.getId() +
+                ", Nota: " + ev.getNota() +
+                ", Ponderación: " + ev.getPonderacion() +
+                ", Título: " + ev.getTitulo()
+            ));
+
+            service.actualizarEvaluacionesEnLote(evaluaciones); // 👈 esta línea es la clave
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            e.printStackTrace(); // muestra error si ocurre
+            return ResponseEntity.status(500).body("Error al actualizar evaluaciones");
+        }
+    }
+
+
+
+
+
+
 }
