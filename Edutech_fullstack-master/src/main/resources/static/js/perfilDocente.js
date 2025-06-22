@@ -135,7 +135,7 @@ document.getElementById('cerrarSesion').addEventListener('click', (e) => {
   window.location.href = 'login.html';
 });
 
-function mostrarMisCursos(docenteId) {
+/*function mostrarMisCursos(docenteId) {
   fetch(`http://localhost:8080/api/cursos/docente/${docenteId}`)
     .then(res => {
       if (!res.ok) throw new Error('Error al cargar cursos');
@@ -157,7 +157,13 @@ function mostrarMisCursos(docenteId) {
               <button class="btnVerEstudiantes" data-id="${curso.id}">Ver estudiantes</button>
               <button class="btnEvaluar" data-id="${curso.id}">Evaluar</button>
 
-            </div>`;
+            <div class="crear-seccion">
+              <input type="text" id="input-seccion-${curso.id}" placeholder="Título de sección">
+              <button class="btnCrearSeccion" data-id="${curso.id}">Crear sección</button>
+            </div>
+
+            <div id="lista-secciones-${curso.id}"></div>
+          </div>`;
         });
         html += `</div>`;
       }
@@ -193,7 +199,412 @@ function mostrarMisCursos(docenteId) {
     .catch(() => {
       contenidoPrincipal.innerHTML = `<p>Error cargando cursos. Intenta de nuevo.</p>`;
     });
+}*/
+function mostrarMisCursos(docenteId) {
+  fetch(`http://localhost:8080/api/cursos/docente/${docenteId}`)
+    .then(res => {
+      if (!res.ok) throw new Error('Error al cargar cursos');
+      return res.json();
+    })
+    .then(cursos => {
+      let html = `<h3>Mis Cursos</h3>`;
+
+      if (cursos.length === 0) {
+        html += `<p>No tienes cursos creados aún.</p>`;
+      } else {
+        html += `<div>`;
+        cursos.forEach(curso => {
+          html += `
+            <div class="curso-card">
+              <h4>${curso.nombre}</h4>
+              <p>${curso.descripcion}</p>
+              <button class="btnEliminar" data-id="${curso.id}">Eliminar</button>
+              <button class="btnVerEstudiantes" data-id="${curso.id}">Ver estudiantes</button>
+              <button class="btnEvaluar" data-id="${curso.id}">Evaluar</button>
+
+              <div class="crear-seccion">
+                <input type="text" id="input-seccion-${curso.id}" placeholder="Título de sección">
+                <button class="btnCrearSeccion" data-id="${curso.id}">Crear sección</button>
+              </div>
+
+              <div id="lista-secciones-${curso.id}"></div>
+            </div>`;
+        });
+        html += `</div>`;
+      }
+
+      html += `<button id="btnNuevoCurso" class="btn-primary" style="margin-top:20px;">Crear Nuevo Curso</button>`;
+      contenidoPrincipal.innerHTML = html;
+
+      // Botones funcionales existentes
+      document.querySelectorAll('.btnVerEstudiantes').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const cursoId = btn.getAttribute('data-id');
+          verEstudiantes(cursoId);
+        });
+      });
+
+      document.getElementById('btnNuevoCurso').addEventListener('click', mostrarFormularioNuevoCurso);
+
+      document.querySelectorAll('.btnEliminar').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idCurso = btn.getAttribute('data-id');
+          if (confirm('¿Estás seguro que quieres eliminar este curso?')) {
+            eliminarCurso(idCurso, docenteId);
+          }
+        });
+      });
+
+      document.querySelectorAll('.btnEvaluar').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const cursoId = btn.getAttribute('data-id');
+          mostrarFormularioEvaluacion(cursoId);
+        });
+      });
+
+      // NUEVO: Crear sección
+      document.querySelectorAll('.btnCrearSeccion').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const cursoId = btn.getAttribute('data-id');
+          const input = document.getElementById(`input-seccion-${cursoId}`);
+          const titulo = input.value.trim();
+
+          if (!titulo) {
+            alert("El título de la sección no puede estar vacío.");
+            return;
+          }
+
+          const seccion = {
+          titulo: input.value.trim(),
+          curso: {
+            id: parseInt(cursoId)   // ✅ Este es el formato correcto
+          }
+        };
+
+        console.log("cursoId usado para crear sección:", cursoId);
+
+          fetch("http://localhost:8080/api/secciones", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(seccion)
+          })
+            .then(res => {
+              if (!res.ok) throw new Error("Error al crear la sección");
+              return res.json();
+            })
+            .then(data => {
+              alert("Sección creada correctamente");
+              input.value = "";
+              // 🔄 Recargar secciones solo del curso actualizado
+              cargarSeccionesPorCurso(cursoId);
+            })
+            .catch(err => {
+              console.error(err);
+              alert("Error al crear la sección");
+            });
+        });
+      });
+
+      // NUEVO: cargar secciones de cada curso
+      cursos.forEach(curso => {
+        cargarSeccionesPorCurso(curso.id);
+      });
+
+    })
+    .catch(() => {
+      contenidoPrincipal.innerHTML = `<p>Error cargando cursos. Intenta de nuevo.</p>`;
+    });
 }
+
+/*// NUEVA FUNCIÓN: cargar y mostrar secciones por curso
+function cargarSeccionesPorCurso(cursoId) {
+  fetch(`http://localhost:8080/api/secciones/curso/${cursoId}`)
+    .then(res => res.json())
+    .then(secciones => {
+      const contenedor = document.getElementById(`lista-secciones-${cursoId}`);
+      if (!contenedor) return;
+
+      if (secciones.length === 0) {
+        contenedor.innerHTML = "<p style='color: gray;'>No hay secciones todavía.</p>";
+      } else {
+        let html = "<ul>";
+        secciones.forEach(sec => {
+          html += `<li>📁 ${sec.titulo}</li>`;
+        });
+        html += "</ul>";
+        contenedor.innerHTML = html;
+      }
+    })
+    .catch(err => {
+      console.error("Error al cargar secciones:", err);
+    });
+}*/
+
+/*function cargarSeccionesPorCurso(cursoId) {
+  fetch(`http://localhost:8080/api/secciones/curso/${cursoId}`)
+    .then(res => res.json())
+    .then(secciones => {
+      const contenedor = document.getElementById(`lista-secciones-${cursoId}`);
+      if (!contenedor) return;
+
+      if (secciones.length === 0) {
+        contenedor.innerHTML = "<p style='color: gray;'>No hay secciones todavía.</p>";
+      } else {
+        let html = "<ul>";
+        secciones.forEach(sec => {
+          html += `
+            <li>
+              📁 <strong>${sec.titulo}</strong><br>
+              <textarea id="desc-${sec.id}" rows="3" style="width:90%;">${sec.descripcion || ""}</textarea><br>
+              <button onclick="guardarDescripcion(${sec.id})">Guardar Descripción</button>
+            </li><br>
+          `;
+        });
+        html += "</ul>";
+        contenedor.innerHTML = html;
+      }
+    })
+    .catch(err => {
+      console.error("Error al cargar secciones:", err);
+    });
+}*/
+
+/*function cargarSeccionesPorCurso(cursoId) {
+  fetch(`http://localhost:8080/api/secciones/curso/${cursoId}`)
+    .then(res => res.json())
+    .then(secciones => {
+      const contenedor = document.getElementById(`lista-secciones-${cursoId}`);
+      if (!contenedor) return;
+
+      if (secciones.length === 0) {
+        contenedor.innerHTML = "<p style='color: gray;'>No hay secciones todavía.</p>";
+      } else {
+        let html = "<ul>";
+        secciones.forEach(sec => {
+          html += `
+            <li>
+              📁 <strong>${sec.titulo}</strong><br>
+
+              <!-- Descripción editable -->
+              <textarea id="desc-${sec.id}" rows="3" style="width:90%;">${sec.descripcion || ""}</textarea><br>
+              <button onclick="guardarDescripcion(${sec.id})">Guardar Descripción</button>
+
+              <!-- Formulario para subir archivo -->
+              <form id="formArchivo-${sec.id}" enctype="multipart/form-data" style="margin-top:10px;">
+                <input type="file" name="archivo" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" />
+                <button type="button" onclick="subirArchivo(${sec.id})">Subir archivo</button>
+              </form>
+            </li><br>
+          `;
+        });
+        html += "</ul>";
+        contenedor.innerHTML = html;
+      }
+    })
+    .catch(err => {
+      console.error("Error al cargar secciones:", err);
+    });
+}*/
+
+function cargarSeccionesPorCurso(cursoId) {
+  fetch(`http://localhost:8080/api/secciones/curso/${cursoId}`)
+    .then(res => res.json())
+    .then(secciones => {
+      const contenedor = document.getElementById(`lista-secciones-${cursoId}`);
+      if (!contenedor) return;
+
+      if (secciones.length === 0) {
+        contenedor.innerHTML = "<p style='color: gray;'>No hay secciones todavía.</p>";
+      } else {
+        let html = "<ul>";
+        secciones.forEach(sec => {
+          html += `
+            <li>
+              📁 <strong>${sec.titulo}</strong><br>
+
+              <!-- Descripción editable -->
+              <textarea id="desc-${sec.id}" rows="3" style="width:90%;">${sec.descripcion || ""}</textarea><br>
+              <button onclick="guardarDescripcion(${sec.id})">Guardar Descripción</button>
+              <button onclick="eliminarSeccion(${sec.id})" style="margin-left:10px; background-color:#e74c3c; color:white;">Eliminar Sección</button>
+
+              <div id="archivos-seccion-${sec.id}"></div>
+              <!-- Subida de archivos -->
+              <form id="formArchivo-${sec.id}" enctype="multipart/form-data" style="margin-top:10px;">
+                <input type="file" name="archivo" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" />
+                <button type="button" onclick="subirArchivo(${sec.id})">Subir archivo</button>
+              </form>
+
+              <!-- Visualización de archivos -->
+              <div id="archivos-${sec.id}" style="margin-top:10px;"></div>
+            </li><br>
+          `;
+        });
+        html += "</ul>";
+        contenedor.innerHTML = html;
+
+        // 🚀 Luego de mostrar secciones, cargar los archivos asociados a cada una
+        secciones.forEach(sec => {
+          cargarArchivosPorSeccion(sec.id);
+        });
+      }
+    })
+    .catch(err => {
+      console.error("Error al cargar secciones:", err);
+    });
+}
+
+
+/*function subirArchivo(seccionId) {
+  const form = document.getElementById(`formArchivo-${seccionId}`);
+  const formData = new FormData(form);
+
+  fetch(`http://localhost:8080/api/secciones/${seccionId}/archivo`, {
+    method: "POST",
+    body: formData
+  })
+    .then(res => {
+      if (!res.ok) throw new Error("Error al subir archivo");
+      alert("Archivo subido correctamente");
+    })
+    .catch(err => {
+      console.error(err);
+      alert("Error al subir archivo");
+    });
+}*/
+
+function subirArchivo(seccionId) { 
+  const form = document.getElementById(`formArchivo-${seccionId}`);
+  const formData = new FormData(form);
+  formData.append("seccionId", seccionId);
+
+  fetch("http://localhost:8080/api/archivos/subir", {
+    method: "POST",
+    body: formData
+  })
+    .then(res => {
+      if (!res.ok) throw new Error("Error al subir archivo");
+
+      return res.json(); // ✅ usa .text() si la respuesta no es JSON
+    })
+    .then(json => {
+      console.log("Respuesta del servidor:", json);
+      alert("Archivo subido correctamente");
+      cargarArchivosDeSeccion(seccionId);
+    })
+    .catch(err => {
+  console.warn("Ocurrió un error, pero no se notificará al usuario:", err);
+});
+
+    
+}
+
+
+
+
+
+
+/*function cargarArchivosDeSeccion(seccionId) {
+  fetch(`http://localhost:8080/api/secciones/${seccionId}/archivos`)
+    .then(res => res.json())
+    .then(archivos => {
+      const contenedor = document.getElementById(`archivos-${seccionId}`);
+      if (!contenedor) return;
+
+      if (archivos.length === 0) {
+        contenedor.innerHTML = "<p style='color: gray;'>Sin archivos subidos.</p>";
+      } else {
+        let lista = "<ul>";
+        archivos.forEach(archivo => {
+          lista += `<li><a href="http://localhost:8080/api/archivos/${archivo.id}/descargar" target="_blank">${archivo.nombre}</a></li>`;
+        });
+        lista += "</ul>";
+        contenedor.innerHTML = lista;
+      }
+    })
+    .catch(err => {
+      console.error("Error al cargar archivos de la sección:", err);
+    });
+}*/
+
+function cargarArchivosPorSeccion(seccionId) {
+  fetch(`http://localhost:8080/api/archivos/seccion/${seccionId}`)
+    .then(res => res.json())
+    .then(archivos => {
+      const contenedor = document.getElementById(`archivos-seccion-${seccionId}`);
+      if (!contenedor) return;
+
+      if (archivos.length === 0) {
+        contenedor.innerHTML = "<p style='color: gray;'>No hay archivos subidos.</p>";
+      } else {
+        let html = "<ul>";
+        archivos.forEach(archivo => {
+          html += `
+            <li>
+              📎 <a href="http://localhost:8080/api/archivos/descargar/${archivo.id}" target="_blank">${archivo.nombre}</a>
+              <button onclick="eliminarArchivo(${archivo.id}, ${seccionId})" style="margin-left:10px;">Eliminar</button>
+            </li>`;
+        });
+        html += "</ul>";
+        contenedor.innerHTML = html;
+      }
+    })
+    .catch(err => {
+      console.error("Error al cargar archivos:", err);
+    });
+}
+
+
+
+
+function eliminarArchivo(archivoId, seccionId) {
+  if (!confirm("¿Estás seguro de que quieres eliminar este archivo?")) return;
+
+  fetch(`http://localhost:8080/api/archivos/${archivoId}`, {
+    method: "DELETE"
+  })
+    .then(res => {
+      if (!res.ok) throw new Error("No se pudo eliminar el archivo.");
+      return res.text();
+    })
+    .then(() => {
+      alert("Archivo eliminado correctamente.");
+      cargarArchivosPorSeccion(seccionId);
+    })
+    .catch(err => {
+      console.error("Error al eliminar archivo:", err);
+      alert("Error al eliminar archivo.");
+    });
+}
+
+
+
+
+
+function guardarDescripcion(seccionId) {
+  const textarea = document.getElementById(`desc-${seccionId}`);
+  const nuevaDescripcion = textarea.value;
+
+  fetch(`http://localhost:8080/api/secciones/${seccionId}/descripcion`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(nuevaDescripcion)
+  })
+    .then(res => {
+      if (!res.ok) throw new Error("Error al guardar descripción");
+      alert("Descripción actualizada correctamente");
+    })
+    .catch(err => {
+      console.error(err);
+      alert("Error al actualizar descripción");
+    });
+}
+
+
+
 
 function mostrarFormularioNuevoCurso() {
   contenidoPrincipal.innerHTML = `
@@ -1055,3 +1466,29 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+
+
+function eliminarSeccion(seccionId) {
+  if (!confirm("¿Estás seguro de que deseas eliminar esta sección?")) return;
+
+  fetch(`http://localhost:8080/api/secciones/${seccionId}`, {
+    method: "DELETE"
+  })
+    .then(res => {
+      if (res.status === 200 || res.status === 204) {
+        alert("Sección eliminada correctamente");
+        const elemento = document.getElementById(`seccion-${seccionId}`);
+        if (elemento) {
+          elemento.remove(); // Elimina del DOM si existe
+        }
+      } else {
+        throw new Error("Respuesta no exitosa al eliminar sección");
+      }
+    })
+    .catch(err => {
+      console.error("Error real:", err);
+      alert("No se pudo eliminar la sección");
+    });
+}
+
+

@@ -35,4 +35,9 @@ public class Curso {
 
     public Estudiante getDocente() { return docente; }
     public void setDocente(Estudiante docente) { this.docente = docente; }
+
+
+    
+
+
 }
