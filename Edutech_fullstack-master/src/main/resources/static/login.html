@@ -1,53 +1,48 @@
-<!DOCTYPE html> <!-- Define que este documento es HTML5 -->
-<html lang="es"> <!-- Indica que el contenido está en español -->
-
+<!DOCTYPE html>
+<html lang="es">
 <head>
-  <meta charset="UTF-8" /> <!-- Define la codificación de caracteres como UTF-8 -->
-  <title>Bienvenido a EduTech</title> <!-- Título que aparecerá en la pestaña del navegador -->
-
-  <!-- Enlace al archivo de estilos CSS externo -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Iniciar Sesión – EduTech</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- Tu CSS personalizado -->
   <link rel="stylesheet" href="css/styles.css" />
-
-  <!-- Configuración para que la página sea responsive en dispositivos móviles -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 </head>
+<body class="login-page">
 
-<body>
-  <!-- Contenedor general que agrupa la sección de bienvenida y el formulario -->
-  <div class="login-container">
+  <div class="card login-card">
+    <div class="card-body">
+      <h2 class="login-title text-center">¡Bienvenido a EduTech!</h2>
+      <p class="text-center text-muted mb-4">
+        Por favor, inicia sesión para continuar.
+      </p>
 
-    <!-- Sección visual de bienvenida -->
-    <div class="welcome-section">
-      <h1>¡Bienvenidos a EduTech!</h1> <!-- Título principal de la página -->
-      <p>Por favor, inicie sesión para continuar.</p> <!-- Mensaje de indicación -->
+      <div id="mensajeLogin" class="mb-3 text-center"></div>
 
-      <!-- Imagen ilustrativa -->
-      <img src="img/edu_illustration.svg" alt="Ilustración educativa" class="welcome-img" />
-    </div>
-
-    <!-- Sección del formulario de login -->
-    <div class="form-section">
-      <form id="loginForm" class="form-login"> <!-- Formulario de inicio de sesión -->
-        <h2>Iniciar Sesión</h2> <!-- Título del formulario -->
-
-        <!-- Campo para el correo electrónico -->
-        <label for="correo">Correo electrónico</label>
-        <input type="email" id="correo" name="correo" placeholder="ejemplo@correo.com" required />
-
-        <!-- Campo para la contraseña -->
-        <label for="password">Contraseña</label>
-        <input type="password" id="password" name="password" placeholder="Tu contraseña" required />
-
-        <!-- Botón para enviar el formulario -->
-        <button type="submit" class="btn-primary">Ingresar</button>
-
-        <!-- Contenedor para mostrar mensajes de error o éxito -->
-        <div id="mensajeLogin" class="mensaje-login"></div>
+      <form id="loginForm" novalidate>
+        <div class="mb-3">
+          <label for="correo" class="form-label">Correo electrónico</label>
+          <input type="email" class="form-control" id="correo" placeholder="tu@ejemplo.com" required>
+          <div class="invalid-feedback">Ingresa un correo válido.</div>
+        </div>
+        <div class="mb-4">
+          <label for="password" class="form-label">Contraseña</label>
+          <input type="password" class="form-control" id="password" placeholder="Tu contraseña" required>
+          <div class="invalid-feedback">La contraseña es obligatoria.</div>
+        </div>
+        <button type="submit" class="btn btn-login btn-lg w-100 text-white">
+          <i class="bi bi-box-arrow-in-right"></i> Ingresar
+        </button>
       </form>
     </div>
   </div>
 
-  <!-- Archivo JavaScript que maneja la lógica del login -->
+  <!-- Bootstrap Bundle JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Tu script de login (externo o inline) -->
   <script src="js/login.js"></script>
 </body>
 </html>

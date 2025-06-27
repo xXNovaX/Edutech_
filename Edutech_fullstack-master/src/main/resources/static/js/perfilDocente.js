@@ -1,9 +1,9 @@
-const nombreUsuario = document.getElementById('nombreUsuario');
-const nombreDocente = document.getElementById('nombreDocente');
-const welcomeMenu = document.getElementById('welcomeMenu');
-const toggleMenuBtn = document.getElementById('toggleMenuBtn');
-const welcomeContent = document.getElementById('welcomeContent');
-const contenidoPrincipal = document.getElementById('contenidoPrincipal');
+const nombreUsuario     = document.getElementById('nombreUsuario');
+const nombreDocente     = document.getElementById('nombreDocente');
+const welcomeMenu       = document.getElementById('welcomeMenu');
+const toggleMenuBtn     = document.getElementById('toggleMenuBtn');
+const welcomeContent    = document.getElementById('welcomeContent');
+const contenidoPrincipal= document.getElementById('contenidoPrincipal');
 
 window.addEventListener('DOMContentLoaded', () => {
   const usuarioGuardado = localStorage.getItem('usuario');
@@ -13,24 +13,32 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   const usuario = JSON.parse(usuarioGuardado);
-
   if (usuario.rol !== 'DOCENTE') {
     alert('No tienes permisos para acceder aquí');
     window.location.href = 'login.html';
     return;
   }
 
-  welcomeMenu.style.display = 'flex';
+  // Mostrar menú y nombres
+  if (welcomeMenu) welcomeMenu.style.display = 'flex';
   nombreUsuario.textContent = usuario.nombre;
   nombreDocente.textContent = usuario.nombre;
 
+  /*// Enganchar botón púrpura
+  const btnNuevo = document.getElementById('btnNuevoCurso');
+  if (btnNuevo) {
+    btnNuevo.addEventListener('click', mostrarFormularioNuevoCurso);
+  }*/
+
+  // Carga inicial de cursos
   mostrarMisCursos(usuario.id);
 });
 
+/*/ Mantén el resto de tu JS EXACTAMENTE igual:
 toggleMenuBtn.addEventListener('click', () => {
   welcomeContent.classList.toggle('show');
   toggleMenuBtn.classList.toggle('active');
-});
+});*/
 
 document.getElementById('evaluarAlumnos').addEventListener('click', async (e) => {
   e.preventDefault();
@@ -137,6 +145,13 @@ document.getElementById('cerrarSesion').addEventListener('click', (e) => {
 
 
 function mostrarMisCursos(docenteId) {
+  // ① Antes de cargar los cursos, aseguramos que el botón púrpura inferior quede visible
+  const btnNuevo = document.getElementById('btnNuevoCurso');
+  if (btnNuevo) {
+    btnNuevo.style.display = 'inline-block';
+  }
+
+  // ② Tu fetch y render de cursos tal cual
   fetch(`http://localhost:8080/api/cursos/docente/${docenteId}`)
     .then(res => {
       if (!res.ok) throw new Error('Error al cargar cursos');
@@ -153,17 +168,13 @@ function mostrarMisCursos(docenteId) {
           html += `
             <div class="curso-card" style="--bar-color: ${curso.colorHex || '#4CC8E8'};">
               <div class="card-color-bar"></div>
-
               <div class="card-content">
                 <div class="card-meta">
                   <small>${curso.periodo || ''}</small>
                   <small>${curso.codigo || ''}</small>
                 </div>
                 <h3 class="card-titulo">${curso.nombre}</h3>
-
-                <!-- DESCRIPCIÓN ADICIONADA -->
                 <p class="card-desc">${curso.descripcion || ''}</p>
-
                 <div class="card-info">
                   <span class="card-estado">${curso.estado || 'Abierto'}</span> |
                   <span>${curso.docenteNombre || ''}</span>
@@ -188,14 +199,12 @@ function mostrarMisCursos(docenteId) {
         html += `</div>`;
       }
 
-      html += `<button id="btnNuevoCurso" class="btn-primary" style="margin-top:20px;">Crear Nuevo Curso</button>`;
       contenidoPrincipal.innerHTML = html;
 
-      // Listeners
+      // Listeners (igual que antes)
       document.querySelectorAll('.btnVerEstudiantes').forEach(btn =>
         btn.addEventListener('click', () => verEstudiantes(btn.dataset.id))
       );
-      document.getElementById('btnNuevoCurso').addEventListener('click', mostrarFormularioNuevoCurso);
       document.querySelectorAll('.btnEliminar').forEach(btn =>
         btn.addEventListener('click', () => {
           if (confirm('¿Estás seguro que quieres eliminar este curso?')) {
@@ -206,7 +215,6 @@ function mostrarMisCursos(docenteId) {
       document.querySelectorAll('.btnEvaluar').forEach(btn =>
         btn.addEventListener('click', () => mostrarFormularioEvaluacion(btn.dataset.id))
       );
-
       document.querySelectorAll('.btnCrearSeccion').forEach(btn =>
         btn.addEventListener('click', () => {
           const cursoId = btn.dataset.id;
@@ -236,6 +244,8 @@ function mostrarMisCursos(docenteId) {
       contenidoPrincipal.innerHTML = `<p>Error cargando cursos. Intenta de nuevo.</p>`;
     });
 }
+
+
 
 
 
@@ -971,4 +981,13 @@ function eliminarSeccion(seccionId) {
     });
 }
 
-
+// ————————————————————————
+// Delegación global: todos los clicks en el body
+// ————————————————————————
+document.body.addEventListener('click', e => {
+  // Si el clic viene de dentro del botón púrpura (o su icono/texto)
+  if (e.target.closest('#btnNuevoCurso')) {
+    e.preventDefault();
+    mostrarFormularioNuevoCurso();
+  }
+});

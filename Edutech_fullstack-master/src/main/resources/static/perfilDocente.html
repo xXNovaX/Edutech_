@@ -1,58 +1,83 @@
-<!DOCTYPE html> <!-- Declaración de tipo de documento HTML5 -->
-<html lang="es"> <!-- Indica que el idioma principal es español -->
-
+<!DOCTYPE html>
+<html lang="es">
 <head>
-  <meta charset="UTF-8" /> <!-- Codificación de caracteres en UTF-8 -->
-  <title>Perfil Docente - EduTech</title> <!-- Título de la pestaña del navegador -->
-
-  <!-- Enlace al archivo de estilos CSS externo -->
-  <link rel="stylesheet" href="css/styles.css" />
-
-  <!-- Configuración del viewport para diseño responsive en móviles -->
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Perfil Docente – EduTech</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- Tus estilos -->
+  <link rel="stylesheet" href="css/styles.css" />
 </head>
+<body class="bg-gradient-purple">
 
-<body>
+  <!-- NAVBAR FIJA ARRIBA -->
+  <nav class="navbar navbar-expand-lg fixed-top navbar-dark bg-purple-gradient shadow">
+    <div class="container-fluid">
+      <a class="navbar-brand fw-bold" href="#">EduTech</a>
+      <button class="navbar-toggler" type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#mainNavbar"
+              aria-controls="mainNavbar"
+              aria-expanded="false"
+              aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
 
-  <!-- Menú de usuario fijo en la esquina superior derecha (oculto inicialmente) -->
-  <div id="welcomeMenu" class="welcome-menu" style="display:none;">
-    <!-- Botón para desplegar el menú -->
-    <button id="toggleMenuBtn" class="menu-btn" type="button">
-      <span id="nombreUsuario" class="nombre-usuario">Docente</span> <!-- Nombre visible en el botón -->
-      
-      <!-- Ícono de flecha (indica que el botón despliega algo) -->
-      <svg class="arrow" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-      </svg>
-    </button>
+      <div class="collapse navbar-collapse" id="mainNavbar">
+        <ul class="navbar-nav me-auto"></ul>
+        <ul class="navbar-nav align-items-center">
+          <li class="nav-item dropdown">
+            <a id="toggleMenuBtn"
+               class="nav-link dropdown-toggle"
+               href="#"
+               role="button"
+               data-bs-toggle="dropdown"
+               aria-expanded="false">
+              <i class="bi bi-person-circle me-1"></i>
+              <span id="nombreUsuario">Docente</span>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item" href="#" id="misCursos">Mis Cursos</a></li>
+              <li><a class="dropdown-item" href="#" id="evaluarAlumnos">Evaluar Alumnos</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item text-danger" href="#" id="cerrarSesion">
+                <i class="bi bi-box-arrow-right me-1"></i>Cerrar sesión
+              </a></li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
 
-    <!-- Contenido del menú desplegable -->
-    <div id="welcomeContent" class="welcome-content">
-      <ul class="menu-list">
-        <!-- Opciones del menú -->
-        <li><a href="#" id="misCursos">Mis Cursos</a></li>
-        <li><a href="#" id="evaluarAlumnos">Evaluar Alumnos</a></li>
-        <li><a href="#" id="cerrarSesion">Cerrar sesión</a></li>
-      </ul>
+  <!-- Espacio para que no quede oculto bajo la navbar -->
+  <div class="mt-5 pt-3"></div>
+
+  <!-- Contenedor principal -->
+  <div class="container my-5">
+    <div class="card shadow-lg border-0">
+      <div class="card-body">
+        <h2 class="card-title">Bienvenido, <span id="nombreDocente"></span></h2>
+        
+        <!-- Aquí inyectas la lista de cursos -->
+        <div id="contenidoPrincipal"></div>
+        
+        <!-- Botón Crear Curso: siempre permanece -->
+        <div class="d-flex justify-content-center mt-4">
+          <button id="btnNuevoCurso" class="btn btn-gradient-purple btn-lg">
+            <i class="bi bi-plus-lg"></i> Crear Nuevo Curso
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Contenedor central principal -->
-  <div class="container" style="max-width: 700px; margin: 80px auto 40px;">
-    <!-- Título de bienvenida con nombre dinámico del docente -->
-    <h2>Bienvenido, <span id="nombreDocente"></span></h2>
-
-    <!-- Área donde se cargan dinámicamente los cursos del docente u otras funcionalidades -->
-    <div id="contenidoPrincipal">
-      <!-- Aquí cargamos cursos o formularios desde JS -->
-    </div>
-    
-  </div>
-
-  <!-- Script que contiene la lógica del perfil del docente -->
+  <!-- Bootstrap Bundle JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Tu lógica JS -->
   <script src="js/perfilDocente.js"></script>
-
-  <!-- Contenedor donde se cargarán los cursos dinámicamente -->
-  <div id="contenidoPrincipal"></div>
 </body>
 </html>

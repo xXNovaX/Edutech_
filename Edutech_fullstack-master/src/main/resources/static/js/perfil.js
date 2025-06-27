@@ -1,170 +1,147 @@
-// Referencias a elementos del DOM que se usarán
-const nombreUsuario = document.getElementById('nombreUsuario');
-const welcomeMenu = document.getElementById('welcomeMenu');
-const toggleMenuBtn = document.getElementById('toggleMenuBtn');
-const welcomeContent = document.getElementById('welcomeContent');
-const cursosDisponibles = document.getElementById('cursosDisponibles');
-const tituloSeccion = document.getElementById('tituloSeccion');
+// Referencias al DOM
+const nombreUsuario      = document.getElementById('nombreUsuario');
+const cursosDisponibles  = document.getElementById('cursosDisponibles');
+const tituloSeccion      = document.getElementById('tituloSeccion');
 
-// Al cargar el contenido de la página (DOMContentLoaded)
+// Listener inicial
 window.addEventListener('DOMContentLoaded', () => {
-  // Obtener usuario guardado en localStorage (sesión)
   const usuarioGuardado = localStorage.getItem('usuario');
-
-  // Si no hay usuario, redirigir a login
   if (!usuarioGuardado) {
     window.location.href = 'login.html';
-    return; // Termina la ejecución del evento
+    return;
   }
 
-  // Parsear datos del usuario
   const usuario = JSON.parse(usuarioGuardado);
-
-  // Mostrar menú de bienvenida
-  welcomeMenu.style.display = 'block';
-
-  // Mostrar nombre del usuario en el menú
   nombreUsuario.textContent = usuario.nombre;
 
-  // Cargar y mostrar cursos disponibles para inscripción al cargar la página
+  // Al cargar, mostrar cursos disponibles y cerrar el dropdown
   cargarCursosDisponibles();
+  document.querySelector('.dropdown-menu').classList.remove('show');
 });
 
-// Evento para abrir/cerrar el menú al hacer click en el botón
-toggleMenuBtn.addEventListener('click', () => {
-  welcomeContent.classList.toggle('show'); // Mostrar u ocultar contenido del menú
-  toggleMenuBtn.classList.toggle('active'); // Cambiar estilo del botón
-});
+// Helpers para manejar dropdown (Bootstrap v5)  
+function cerrarDropdown() {
+  const dropdownEl = document.getElementById('toggleMenuBtn');
+  const dropdown = bootstrap.Dropdown.getInstance(dropdownEl);
+  if (dropdown) dropdown.hide();
+}
 
-// Eventos para las opciones del menú
-document.getElementById('inscripcionCursos').addEventListener('click', (e) => {
-  e.preventDefault(); // Prevenir comportamiento por defecto del enlace
-  cargarCursosDisponibles(); // Mostrar cursos disponibles para inscribirse
-});
-
-document.getElementById('misCursosInscritos').addEventListener('click', (e) => {
+// Enlaces del menú
+document.getElementById('inscripcionCursos').addEventListener('click', e => {
   e.preventDefault();
-  cargarCursosInscritos(); // Mostrar cursos en los que el estudiante ya está inscrito
+  cargarCursosDisponibles();
+  cerrarDropdown();
 });
 
-document.getElementById('gestionarCuenta').addEventListener('click', (e) => {
+document.getElementById('misCursosInscritos').addEventListener('click', e => {
   e.preventDefault();
-  tituloSeccion.textContent = 'Gestionar Cuenta'; // Cambiar título de la sección
-  cursosDisponibles.innerHTML = `<p>Funcionalidad Gestionar Cuenta en construcción...</p>`; // Mensaje temporal
+  cargarCursosInscritos();
+  cerrarDropdown();
 });
 
-document.getElementById('evaluaciones').addEventListener('click', (e) => {
+document.getElementById('gestionarCuenta').addEventListener('click', e => {
   e.preventDefault();
-  tituloSeccion.textContent = 'Evaluaciones'; // Cambiar título
-  cursosDisponibles.innerHTML = `<p>Funcionalidad Evaluaciones en construcción...</p>`; // Mensaje temporal
+  tituloSeccion.textContent = 'Gestionar Cuenta';
+  cursosDisponibles.innerHTML = `<p>Funcionalidad “Gestionar Cuenta” en construcción…</p>`;
+  cerrarDropdown();
 });
 
-document.getElementById('cerrarSesion').addEventListener('click', (e) => {
+document.getElementById('evaluaciones').addEventListener('click', e => {
   e.preventDefault();
-  localStorage.removeItem('usuario'); // Eliminar sesión guardada
-  window.location.href = 'login.html'; // Redirigir a login
+  tituloSeccion.textContent = 'Evaluaciones';
+  cursosDisponibles.innerHTML = `<p>Funcionalidad “Evaluaciones” en construcción…</p>`;
+  cerrarDropdown();
 });
 
-// Función para cargar cursos disponibles desde el backend
+document.getElementById('cerrarSesion').addEventListener('click', e => {
+  e.preventDefault();
+  localStorage.removeItem('usuario');
+  window.location.href = 'login.html';
+});
+
+// Cargar cursos disponibles
 function cargarCursosDisponibles() {
-  tituloSeccion.textContent = 'Cursos disponibles para inscripción'; // Título
-  fetch('http://localhost:8080/api/cursos') // Petición GET a la API de cursos
+  tituloSeccion.textContent = 'Cursos disponibles para inscripción';
+  fetch('http://localhost:8080/api/cursos')
     .then(res => {
-      if (!res.ok) throw new Error('Error al cargar cursos'); // Error si falla la petición
-      return res.json(); // Convertir respuesta a JSON
+      if (!res.ok) throw new Error();
+      return res.json();
     })
     .then(cursos => {
-      // Si no hay cursos disponibles, mostrar mensaje
       if (cursos.length === 0) {
-        cursosDisponibles.innerHTML = `<p>No hay cursos disponibles en este momento.</p>`;
+        cursosDisponibles.innerHTML = `<p>No hay cursos disponibles.</p>`;
         return;
       }
-
-      // Construir lista HTML con cursos y botón para inscribirse
-      let html = '<ul>';
-      cursos.forEach(curso => {
+      let html = '<ul class="list-group">';
+      cursos.forEach(c => {
         html += `
-          <li>
-            <strong>${curso.nombre}</strong>: ${curso.descripcion}
-            <button class="btnInscribir" data-id="${curso.id}">Inscribirse</button>
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              <strong>${c.nombre}</strong><br>
+              <small class="text-muted">${c.descripcion || ''}</small>
+            </div>
+            <button class="btn btn-gradient-purple btn-sm btn-inscribir" data-id="${c.id}">
+              Inscribirse
+            </button>
           </li>`;
       });
       html += '</ul>';
-
-      // Insertar lista en el contenedor
       cursosDisponibles.innerHTML = html;
 
-      // Agregar evento a cada botón "Inscribirse"
-      document.querySelectorAll('.btnInscribir').forEach(btn => {
-        btn.disabled = false; // Asegurar que el botón esté habilitado
-        btn.textContent = 'Inscribirse'; // Texto por defecto
-
-        // Al hacer click, llamar a función para inscribir curso
-        btn.addEventListener('click', () => {
-          const cursoId = btn.getAttribute('data-id'); // Obtener id del curso
-          inscribirCurso(cursoId, btn); // Ejecutar inscripción
-        });
+      document.querySelectorAll('.btn-inscribir').forEach(btn => {
+        btn.addEventListener('click', () => inscribirCurso(btn));
       });
     })
     .catch(() => {
-      // Mostrar mensaje de error en caso de fallo
-      cursosDisponibles.innerHTML = `<p>Error cargando cursos, intenta nuevamente.</p>`;
+      cursosDisponibles.innerHTML = `<p class="text-danger">Error cargando cursos.</p>`;
     });
 }
 
-// Función para inscribir usuario en un curso
-function inscribirCurso(cursoId, btnInscribir) {
-  const usuario = JSON.parse(localStorage.getItem('usuario')); // Obtener usuario actual
-
-  // Petición POST a la API para inscribir curso
+// Inscribir usuario en curso
+function inscribirCurso(btn) {
+  const usuario = JSON.parse(localStorage.getItem('usuario'));
+  const cursoId = btn.dataset.id;
   fetch(`http://localhost:8080/api/inscripciones/estudiante/${usuario.id}/curso/${cursoId}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' }
+    method: 'POST'
   })
-  .then(res => {
-    if (!res.ok) throw new Error('Error inscribiendo curso'); // Manejar error
-    alert('Inscripción realizada con éxito'); // Mensaje éxito
-    btnInscribir.disabled = true; // Deshabilitar botón para evitar múltiples inscripciones
-    btnInscribir.textContent = 'Inscrito'; // Cambiar texto a 'Inscrito'
-  })
-  .catch(() => {
-    alert('No se pudo inscribir al curso, intenta nuevamente.'); // Mensaje error
-  });
+    .then(res => {
+      if (!res.ok) throw new Error();
+      btn.textContent = 'Inscrito';
+      btn.disabled = true;
+      btn.classList.remove('btn-gradient-purple');
+      btn.classList.add('btn-secondary');
+    })
+    .catch(() => {
+      alert('No se pudo inscribir. Intenta nuevamente.');
+    });
 }
 
-// Función para cargar cursos en los que el estudiante ya está inscrito
+// Cargar cursos ya inscritos
 function cargarCursosInscritos() {
-  tituloSeccion.textContent = 'Mis cursos inscritos'; // Cambiar título
-  const usuario = JSON.parse(localStorage.getItem('usuario')); // Usuario actual
-
-  // Petición GET para obtener cursos inscritos
+  tituloSeccion.textContent = 'Mis cursos inscritos';
+  const usuario = JSON.parse(localStorage.getItem('usuario'));
   fetch(`http://localhost:8080/api/inscripciones/estudiante/${usuario.id}`)
     .then(res => {
-      if (!res.ok) throw new Error('Error al cargar cursos inscritos'); // Error si falla
-      return res.json(); // Parsear JSON
+      if (!res.ok) throw new Error();
+      return res.json();
     })
-    .then(cursosInscritos => {
-      // Mostrar mensaje si no hay cursos inscritos
-      if (cursosInscritos.length === 0) {
-        cursosDisponibles.innerHTML = `<p>No estás inscrito en ningún curso aún.</p>`;
+    .then(list => {
+      if (list.length === 0) {
+        cursosDisponibles.innerHTML = `<p>No estás inscrito en ningún curso.</p>`;
         return;
       }
-
-      // Construir lista con cursos inscritos
-      let html = '<ul>';
-      cursosInscritos.forEach(curso => {
+      let html = '<ul class="list-group">';
+      list.forEach(c => {
         html += `
-          <li>
-            <strong>${curso.nombre}</strong>: ${curso.descripcion}
+          <li class="list-group-item">
+            <strong>${c.nombre}</strong><br>
+            <small class="text-muted">${c.descripcion || ''}</small>
           </li>`;
       });
       html += '</ul>';
-
-      // Insertar lista en contenedor
       cursosDisponibles.innerHTML = html;
     })
     .catch(() => {
-      // Mostrar mensaje de error si falla la carga
-      cursosDisponibles.innerHTML = `<p>Error cargando cursos inscritos, intenta nuevamente.</p>`;
+      cursosDisponibles.innerHTML = `<p class="text-danger">Error cargando inscritos.</p>`;
     });
 }
