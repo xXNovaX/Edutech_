@@ -20,7 +20,13 @@
         <java.version>21</java.version>  <!-- Define la versión de Java para compilar -->
     </properties>
 
-    <dependencies>  <!-- Inicio de la lista de dependencias -->
+    <dependencies>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+  <!-- Inicio de la lista de dependencias -->
 
         <dependency>  <!-- Dependencia para usar JPA (persistencia de datos) -->
             <groupId>org.springframework.boot</groupId>  <!-- Grupo de la dependencia -->

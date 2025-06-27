@@ -135,71 +135,7 @@ document.getElementById('cerrarSesion').addEventListener('click', (e) => {
   window.location.href = 'login.html';
 });
 
-/*function mostrarMisCursos(docenteId) {
-  fetch(`http://localhost:8080/api/cursos/docente/${docenteId}`)
-    .then(res => {
-      if (!res.ok) throw new Error('Error al cargar cursos');
-      return res.json();
-    })
-    .then(cursos => {
-      let html = `<h3>Mis Cursos</h3>`;
 
-      if (cursos.length === 0) {
-        html += `<p>No tienes cursos creados aún.</p>`;
-      } else {
-        html += `<div>`;
-        cursos.forEach(curso => {
-          html += `
-            <div class="curso-card">
-              <h4>${curso.nombre}</h4>
-              <p>${curso.descripcion}</p>
-              <button class="btnEliminar" data-id="${curso.id}">Eliminar</button>
-              <button class="btnVerEstudiantes" data-id="${curso.id}">Ver estudiantes</button>
-              <button class="btnEvaluar" data-id="${curso.id}">Evaluar</button>
-
-            <div class="crear-seccion">
-              <input type="text" id="input-seccion-${curso.id}" placeholder="Título de sección">
-              <button class="btnCrearSeccion" data-id="${curso.id}">Crear sección</button>
-            </div>
-
-            <div id="lista-secciones-${curso.id}"></div>
-          </div>`;
-        });
-        html += `</div>`;
-      }
-
-      html += `<button id="btnNuevoCurso" class="btn-primary" style="margin-top:20px;">Crear Nuevo Curso</button>`;
-      contenidoPrincipal.innerHTML = html;
-
-      document.querySelectorAll('.btnVerEstudiantes').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const cursoId = btn.getAttribute('data-id');
-          verEstudiantes(cursoId);
-        });
-      });
-
-      document.getElementById('btnNuevoCurso').addEventListener('click', mostrarFormularioNuevoCurso);
-
-      document.querySelectorAll('.btnEliminar').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const idCurso = btn.getAttribute('data-id');
-          if (confirm('¿Estás seguro que quieres eliminar este curso?')) {
-            eliminarCurso(idCurso, docenteId);
-          }
-        });
-      });
-      document.querySelectorAll('.btnEvaluar').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const cursoId = btn.getAttribute('data-id');
-            mostrarFormularioEvaluacion(cursoId);
-  });
-});
-
-    })
-    .catch(() => {
-      contenidoPrincipal.innerHTML = `<p>Error cargando cursos. Intenta de nuevo.</p>`;
-    });
-}*/
 function mostrarMisCursos(docenteId) {
   fetch(`http://localhost:8080/api/cursos/docente/${docenteId}`)
     .then(res => {
@@ -215,12 +151,30 @@ function mostrarMisCursos(docenteId) {
         html += `<div>`;
         cursos.forEach(curso => {
           html += `
-            <div class="curso-card">
-              <h4>${curso.nombre}</h4>
-              <p>${curso.descripcion}</p>
-              <button class="btnEliminar" data-id="${curso.id}">Eliminar</button>
-              <button class="btnVerEstudiantes" data-id="${curso.id}">Ver estudiantes</button>
-              <button class="btnEvaluar" data-id="${curso.id}">Evaluar</button>
+            <div class="curso-card" style="--bar-color: ${curso.colorHex || '#4CC8E8'};">
+              <div class="card-color-bar"></div>
+
+              <div class="card-content">
+                <div class="card-meta">
+                  <small>${curso.periodo || ''}</small>
+                  <small>${curso.codigo || ''}</small>
+                </div>
+                <h3 class="card-titulo">${curso.nombre}</h3>
+
+                <!-- DESCRIPCIÓN ADICIONADA -->
+                <p class="card-desc">${curso.descripcion || ''}</p>
+
+                <div class="card-info">
+                  <span class="card-estado">${curso.estado || 'Abierto'}</span> |
+                  <span>${curso.docenteNombre || ''}</span>
+                </div>
+              </div>
+
+              <div class="button-group">
+                <button class="btnEliminar" data-id="${curso.id}">Eliminar</button>
+                <button class="btnVerEstudiantes" data-id="${curso.id}">Ver estudiantes</button>
+                <button class="btnEvaluar" data-id="${curso.id}">Evaluar</button>
+              </div>
 
               <div class="crear-seccion">
                 <input type="text" id="input-seccion-${curso.id}" placeholder="Título de sección">
@@ -228,7 +182,8 @@ function mostrarMisCursos(docenteId) {
               </div>
 
               <div id="lista-secciones-${curso.id}"></div>
-            </div>`;
+            </div>
+          `;
         });
         html += `</div>`;
       }
@@ -236,89 +191,59 @@ function mostrarMisCursos(docenteId) {
       html += `<button id="btnNuevoCurso" class="btn-primary" style="margin-top:20px;">Crear Nuevo Curso</button>`;
       contenidoPrincipal.innerHTML = html;
 
-      // Botones funcionales existentes
-      document.querySelectorAll('.btnVerEstudiantes').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const cursoId = btn.getAttribute('data-id');
-          verEstudiantes(cursoId);
-        });
-      });
-
+      // Listeners
+      document.querySelectorAll('.btnVerEstudiantes').forEach(btn =>
+        btn.addEventListener('click', () => verEstudiantes(btn.dataset.id))
+      );
       document.getElementById('btnNuevoCurso').addEventListener('click', mostrarFormularioNuevoCurso);
-
-      document.querySelectorAll('.btnEliminar').forEach(btn => {
+      document.querySelectorAll('.btnEliminar').forEach(btn =>
         btn.addEventListener('click', () => {
-          const idCurso = btn.getAttribute('data-id');
           if (confirm('¿Estás seguro que quieres eliminar este curso?')) {
-            eliminarCurso(idCurso, docenteId);
+            eliminarCurso(btn.dataset.id, docenteId);
           }
-        });
-      });
+        })
+      );
+      document.querySelectorAll('.btnEvaluar').forEach(btn =>
+        btn.addEventListener('click', () => mostrarFormularioEvaluacion(btn.dataset.id))
+      );
 
-      document.querySelectorAll('.btnEvaluar').forEach(btn => {
+      document.querySelectorAll('.btnCrearSeccion').forEach(btn =>
         btn.addEventListener('click', () => {
-          const cursoId = btn.getAttribute('data-id');
-          mostrarFormularioEvaluacion(cursoId);
-        });
-      });
-
-      // NUEVO: Crear sección
-      document.querySelectorAll('.btnCrearSeccion').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const cursoId = btn.getAttribute('data-id');
+          const cursoId = btn.dataset.id;
           const input = document.getElementById(`input-seccion-${cursoId}`);
-          const titulo = input.value.trim();
-
-          if (!titulo) {
-            alert("El título de la sección no puede estar vacío.");
-            return;
-          }
-
-          const seccion = {
-          titulo: input.value.trim(),
-          curso: {
-            id: parseInt(cursoId)   // ✅ Este es el formato correcto
-          }
-        };
-
-        console.log("cursoId usado para crear sección:", cursoId);
-
+          if (!input.value.trim()) return alert("El título de la sección no puede estar vacío.");
           fetch("http://localhost:8080/api/secciones", {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify(seccion)
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ titulo: input.value.trim(), curso: { id: +cursoId } })
           })
-            .then(res => {
-              if (!res.ok) throw new Error("Error al crear la sección");
-              return res.json();
-            })
-            .then(data => {
-              alert("Sección creada correctamente");
-              input.value = "";
-              // 🔄 Recargar secciones solo del curso actualizado
-              cargarSeccionesPorCurso(cursoId);
-            })
-            .catch(err => {
-              console.error(err);
-              alert("Error al crear la sección");
-            });
-        });
-      });
+          .then(res => {
+            if (!res.ok) throw new Error();
+            return res.json();
+          })
+          .then(() => {
+            alert("Sección creada correctamente");
+            input.value = "";
+            cargarSeccionesPorCurso(cursoId);
+          })
+          .catch(() => alert("Error al crear la sección"));
+        })
+      );
 
-      // NUEVO: cargar secciones de cada curso
-      cursos.forEach(curso => {
-        cargarSeccionesPorCurso(curso.id);
-      });
-
+      cursos.forEach(curso => cargarSeccionesPorCurso(curso.id));
     })
     .catch(() => {
       contenidoPrincipal.innerHTML = `<p>Error cargando cursos. Intenta de nuevo.</p>`;
     });
 }
 
-/*// NUEVA FUNCIÓN: cargar y mostrar secciones por curso
+
+
+
+
+// =====================================================
+// Función principal: carga el dropdown y prepara el detalle
+// =====================================================
 function cargarSeccionesPorCurso(cursoId) {
   fetch(`http://localhost:8080/api/secciones/curso/${cursoId}`)
     .then(res => res.json())
@@ -328,151 +253,83 @@ function cargarSeccionesPorCurso(cursoId) {
 
       if (secciones.length === 0) {
         contenedor.innerHTML = "<p style='color: gray;'>No hay secciones todavía.</p>";
-      } else {
-        let html = "<ul>";
-        secciones.forEach(sec => {
-          html += `<li>📁 ${sec.titulo}</li>`;
-        });
-        html += "</ul>";
-        contenedor.innerHTML = html;
+        return;
       }
-    })
-    .catch(err => {
-      console.error("Error al cargar secciones:", err);
-    });
-}*/
 
-/*function cargarSeccionesPorCurso(cursoId) {
-  fetch(`http://localhost:8080/api/secciones/curso/${cursoId}`)
-    .then(res => res.json())
-    .then(secciones => {
-      const contenedor = document.getElementById(`lista-secciones-${cursoId}`);
-      if (!contenedor) return;
+      // 1️⃣ Inyectamos el <select> y el placeholder de detalle
+      contenedor.innerHTML = `
+        <label for="select-seccion-${cursoId}">Selecciona sección:</label><br>
+        <select id="select-seccion-${cursoId}" style="margin:5px 0; padding:4px;">
+          <option value="">-- Elige sección --</option>
+        </select>
+        <div id="detalle-seccion-${cursoId}" style="margin-top:1rem;"></div>
+      `;
 
-      if (secciones.length === 0) {
-        contenedor.innerHTML = "<p style='color: gray;'>No hay secciones todavía.</p>";
-      } else {
-        let html = "<ul>";
-        secciones.forEach(sec => {
-          html += `
-            <li>
-              📁 <strong>${sec.titulo}</strong><br>
-              <textarea id="desc-${sec.id}" rows="3" style="width:90%;">${sec.descripcion || ""}</textarea><br>
-              <button onclick="guardarDescripcion(${sec.id})">Guardar Descripción</button>
-            </li><br>
-          `;
-        });
-        html += "</ul>";
-        contenedor.innerHTML = html;
-      }
-    })
-    .catch(err => {
-      console.error("Error al cargar secciones:", err);
-    });
-}*/
+      // 2️⃣ Rellenamos las opciones
+      const sel = document.getElementById(`select-seccion-${cursoId}`);
+      secciones.forEach(sec => {
+        const opt = document.createElement("option");
+        opt.value = sec.id;
+        opt.textContent = sec.titulo;
+        sel.appendChild(opt);
+      });
 
-/*function cargarSeccionesPorCurso(cursoId) {
-  fetch(`http://localhost:8080/api/secciones/curso/${cursoId}`)
-    .then(res => res.json())
-    .then(secciones => {
-      const contenedor = document.getElementById(`lista-secciones-${cursoId}`);
-      if (!contenedor) return;
-
-      if (secciones.length === 0) {
-        contenedor.innerHTML = "<p style='color: gray;'>No hay secciones todavía.</p>";
-      } else {
-        let html = "<ul>";
-        secciones.forEach(sec => {
-          html += `
-            <li>
-              📁 <strong>${sec.titulo}</strong><br>
-
-              <!-- Descripción editable -->
-              <textarea id="desc-${sec.id}" rows="3" style="width:90%;">${sec.descripcion || ""}</textarea><br>
-              <button onclick="guardarDescripcion(${sec.id})">Guardar Descripción</button>
-
-              <!-- Formulario para subir archivo -->
-              <form id="formArchivo-${sec.id}" enctype="multipart/form-data" style="margin-top:10px;">
-                <input type="file" name="archivo" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" />
-                <button type="button" onclick="subirArchivo(${sec.id})">Subir archivo</button>
-              </form>
-            </li><br>
-          `;
-        });
-        html += "</ul>";
-        contenedor.innerHTML = html;
-      }
-    })
-    .catch(err => {
-      console.error("Error al cargar secciones:", err);
-    });
-}*/
-
-function cargarSeccionesPorCurso(cursoId) {
-  fetch(`http://localhost:8080/api/secciones/curso/${cursoId}`)
-    .then(res => res.json())
-    .then(secciones => {
-      const contenedor = document.getElementById(`lista-secciones-${cursoId}`);
-      if (!contenedor) return;
-
-      if (secciones.length === 0) {
-        contenedor.innerHTML = "<p style='color: gray;'>No hay secciones todavía.</p>";
-      } else {
-        let html = "<ul>";
-        secciones.forEach(sec => {
-          html += `
-            <li>
-              📁 <strong>${sec.titulo}</strong><br>
-
-              <!-- Descripción editable -->
-              <textarea id="desc-${sec.id}" rows="3" style="width:90%;">${sec.descripcion || ""}</textarea><br>
-              <button onclick="guardarDescripcion(${sec.id})">Guardar Descripción</button>
-              <button onclick="eliminarSeccion(${sec.id})" style="margin-left:10px; background-color:#e74c3c; color:white;">Eliminar Sección</button>
-
-              <div id="archivos-seccion-${sec.id}"></div>
-              <!-- Subida de archivos -->
-              <form id="formArchivo-${sec.id}" enctype="multipart/form-data" style="margin-top:10px;">
-                <input type="file" name="archivo" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" />
-                <button type="button" onclick="subirArchivo(${sec.id})">Subir archivo</button>
-              </form>
-
-              <!-- Visualización de archivos -->
-              <div id="archivos-${sec.id}" style="margin-top:10px;"></div>
-            </li><br>
-          `;
-        });
-        html += "</ul>";
-        contenedor.innerHTML = html;
-
-        // 🚀 Luego de mostrar secciones, cargar los archivos asociados a cada una
-        secciones.forEach(sec => {
-          cargarArchivosPorSeccion(sec.id);
-        });
-      }
+      // 3️⃣ Al cambiar, mostramos el detalle
+      sel.addEventListener("change", e => {
+        const secId = e.target.value;
+        mostrarDetalleSeccion(secId, cursoId);
+      });
     })
     .catch(err => {
       console.error("Error al cargar secciones:", err);
     });
 }
 
+// =====================================================
+// Función secundaria: muestra descripción, archivos, etc.
+// =====================================================
+function mostrarDetalleSeccion(seccionId, cursoId) {
+  const cont = document.getElementById(`detalle-seccion-${cursoId}`);
+  if (!cont) return;
 
-/*function subirArchivo(seccionId) {
-  const form = document.getElementById(`formArchivo-${seccionId}`);
-  const formData = new FormData(form);
+  if (!seccionId) {
+    cont.innerHTML = "";
+    return;
+  }
 
-  fetch(`http://localhost:8080/api/secciones/${seccionId}/archivo`, {
-    method: "POST",
-    body: formData
-  })
+  fetch(`http://localhost:8080/api/secciones/${seccionId}`)
     .then(res => {
-      if (!res.ok) throw new Error("Error al subir archivo");
-      alert("Archivo subido correctamente");
+      if (!res.ok) throw new Error("Error al cargar sección");
+      return res.json();
+    })
+    .then(sec => {
+      cont.innerHTML = `
+        <div class="detail-card">
+          <h4 class="detail-title">${sec.titulo}</h4>
+          <textarea id="desc-${sec.id}" class="detail-textarea">${sec.descripcion || ""}</textarea>
+          <div class="detail-btns">
+            <button class="btn btn-save" onclick="guardarDescripcion(${sec.id})">Guardar</button>
+            <button class="btn btn-delete" onclick="eliminarSeccion(${sec.id})">Eliminar sección</button>
+          </div>
+          <div id="archivos-seccion-${sec.id}" class="detail-archivos"></div>
+          <form id="formArchivo-${sec.id}" class="detail-form" enctype="multipart/form-data">
+            <input type="file" name="archivo" class="detail-file" required />
+            <button type="button" class="btn btn-primary" onclick="subirArchivo(${sec.id})">Subir archivo</button>
+          </form>
+        </div>
+      `;
+      cargarArchivosPorSeccion(sec.id);
     })
     .catch(err => {
+      cont.innerHTML = `<p class="error-text">Error cargando sección.</p>`;
       console.error(err);
-      alert("Error al subir archivo");
     });
-}*/
+}
+
+
+
+
+
 
 function subirArchivo(seccionId) { 
   const form = document.getElementById(`formArchivo-${seccionId}`);
@@ -505,28 +362,7 @@ function subirArchivo(seccionId) {
 
 
 
-/*function cargarArchivosDeSeccion(seccionId) {
-  fetch(`http://localhost:8080/api/secciones/${seccionId}/archivos`)
-    .then(res => res.json())
-    .then(archivos => {
-      const contenedor = document.getElementById(`archivos-${seccionId}`);
-      if (!contenedor) return;
 
-      if (archivos.length === 0) {
-        contenedor.innerHTML = "<p style='color: gray;'>Sin archivos subidos.</p>";
-      } else {
-        let lista = "<ul>";
-        archivos.forEach(archivo => {
-          lista += `<li><a href="http://localhost:8080/api/archivos/${archivo.id}/descargar" target="_blank">${archivo.nombre}</a></li>`;
-        });
-        lista += "</ul>";
-        contenedor.innerHTML = lista;
-      }
-    })
-    .catch(err => {
-      console.error("Error al cargar archivos de la sección:", err);
-    });
-}*/
 
 function cargarArchivosPorSeccion(seccionId) {
   fetch(`http://localhost:8080/api/archivos/seccion/${seccionId}`)
@@ -852,13 +688,7 @@ function mostrarNotasCurso(cursoId) {
         return;
       }
 
-      /*let html = `<h3>Notas registradas</h3><table border="1">
-        <tr>
-          <th>Estudiante</th>
-          <th>Nota</th>
-          <th>Ponderación (%)</th>
-          <th>Fecha</th>
-        </tr>`;*/
+
 
         let html = `<h3>Notas registradas</h3><table border="1">
         <tr>
@@ -871,14 +701,7 @@ function mostrarNotasCurso(cursoId) {
         </tr>`;
 
 
-      /*evaluaciones.forEach(ev => {
-        html += `<tr>
-          <td>${ev.estudianteNombre || 'ID ' + ev.estudianteId}</td>
-          <td>${ev.nota}</td>
-          <td>${ev.ponderacion}</td>
-          <td>${ev.fecha || '-'}</td>
-        </tr>`;
-      });*/
+ 
 
       evaluaciones.forEach(ev => {
       html += `<tr>
@@ -904,147 +727,7 @@ function mostrarNotasCurso(cursoId) {
 }
 
 
-/*function verEvaluacionesRegistradas(cursoId) {
-  fetch(`http://localhost:8080/api/evaluaciones/curso/${cursoId}`)
-    .then(res => res.json())
-    .then(evaluaciones => {
-      if (evaluaciones.length === 0) {
-        contenidoPrincipal.innerHTML = `<p>No hay evaluaciones registradas para este curso.</p>`;
-        return;
-      }
 
-      let html = `<h3>Evaluaciones Registradas</h3>`;
-      html += `<table border="1"><tr>
-      <th style="display:none;">ID</th>
-      <th>Estudiante</th><th>Nota</th><th>Ponderación (%)</th><th>Fecha</th><th>Título</th>
-    </tr>`;
-
-
-      evaluaciones.forEach(ev => {
-        html += `<tr>
-          <td style="display:none;">${ev.id}</td>
-          <td>${ev.estudianteNombre || 'Desconocido'}</td>
-          <td><input type="number" step="0.1" min="1" max="7" value="${ev.nota}" data-id="${ev.id}" class="notaInput" /></td>
-          <td><input type="number" min="1" max="100" value="${ev.ponderacion}" data-id="${ev.id}" class="pondInput" /></td>
-          <td>${ev.fecha || '-'}</td>
-          <td><input type="text" class="tituloInput" value="${ev.titulo || ''}" data-id="${ev.id}" /></td>
-
-        </tr>`;
-      });
-
-      html += `</table><br/>
-        <button id="btnGuardarCambios" class="btn-primary">Guardar Cambios</button>`;
-
-      contenidoPrincipal.innerHTML = html;
-
-      document.getElementById("btnGuardarCambios").addEventListener("click", guardarCambiosEvaluaciones);
-    })
-    .catch(() => {
-      contenidoPrincipal.innerHTML = `<p>Error al cargar evaluaciones.</p>`;
-    });
-}*/
-
-/*function verEvaluacionesRegistradas(cursoId) {
-  fetch(`http://localhost:8080/api/evaluaciones/curso/${cursoId}`)
-    .then(res => res.json())
-    .then(evaluaciones => {
-      if (evaluaciones.length === 0) {
-        contenidoPrincipal.innerHTML = `<p>No hay evaluaciones registradas para este curso.</p>`;
-        return;
-      }
-
-      let html = `<h3>Evaluaciones Registradas</h3>`;
-      html += `<table border="1"><tr>
-        <th style="display:none;">ID</th>
-        <th>Estudiante</th>
-        <th>Nota</th>
-        <th>Ponderación (%)</th>
-        <th>Fecha</th>
-        <th>Título</th>
-        <th>Eliminar</th>
-      </tr>`;
-
-      evaluaciones.forEach(ev => {
-        html += `<tr>
-          <td style="display:none;">${ev.id}</td>
-          <td>${ev.estudianteNombre || 'Desconocido'}</td>
-          <td><input type="number" step="0.1" min="1" max="7" value="${ev.nota}" data-id="${ev.id}" class="notaInput" /></td>
-          <td><input type="number" min="1" max="100" value="${ev.ponderacion}" data-id="${ev.id}" class="pondInput" /></td>
-          <td>${ev.fecha || '-'}</td>
-          <td><input type="text" class="tituloInput" value="${ev.titulo || ''}" data-id="${ev.id}" /></td>
-          <td><button onclick="eliminarEvaluacion(${ev.id})" style="color:red;">❌</button></td>
-        </tr>`;
-      });
-
-      html += `</table><br/>
-        <button id="btnGuardarCambios" class="btn-primary">Guardar Cambios</button>`;
-
-      contenidoPrincipal.innerHTML = html;
-
-      document.getElementById("btnGuardarCambios").addEventListener("click", guardarCambiosEvaluaciones);
-    })
-    .catch(() => {
-      contenidoPrincipal.innerHTML = `<p>Error al cargar evaluaciones.</p>`;
-    });
-}*/
-
-/*function verEvaluacionesRegistradas(cursoId) {
-  // Guarda el cursoId para futuras acciones como eliminar
-  localStorage.setItem("cursoSeleccionado", cursoId);
-
-  fetch(`http://localhost:8080/api/evaluaciones/curso/${cursoId}`)
-    .then(res => res.json())
-    .then(evaluaciones => {
-      if (evaluaciones.length === 0) {
-        contenidoPrincipal.innerHTML = `<p>No hay evaluaciones registradas para este curso.</p>`;
-        return;
-      }
-
-      let html = `<h3>Evaluaciones Registradas</h3>`;
-      html += `<table border="1"><tr>
-        <th style="display:none;">ID</th>
-        <th>Estudiante</th>
-        <th>Nota</th>
-        <th>Ponderación (%)</th>
-        <th>Fecha</th>
-        <th>Título</th>
-        <th>Eliminar</th>
-      </tr>`;
-
-      /*evaluaciones.forEach(ev => {
-        html += `<tr>
-          <td style="display:none;">${ev.id}</td>
-          <td>${ev.estudianteNombre || 'Desconocido'}</td>
-          <td><input type="number" step="0.1" min="1" max="7" value="${ev.nota}" data-id="${ev.id}" class="notaInput" /></td>
-          <td><input type="number" min="1" max="100" value="${ev.ponderacion}" data-id="${ev.id}" class="pondInput" /></td>
-          <td>${ev.fecha || '-'}</td>
-          <td><input type="text" class="tituloInput" value="${ev.titulo || ''}" data-id="${ev.id}" /></td>
-          <td><button onclick="eliminarEvaluacion(${ev.id})" style="color:red;">❌</button></td>
-        </tr>`;
-      });*/
-
-      /*evaluaciones.forEach(ev => {
-      html += `<tr data-est-id="${ev.estudianteId}"> <!-- Atributo agregado -->`;
-      html += `
-        <td style="display:none;">${ev.id}</td>
-        <td>${ev.estudianteNombre || 'Desconocido'}</td>
-        <td><input type="number" step="0.1" min="1" max="7" value="${ev.nota}" data-id="${ev.id}" class="notaInput" /></td>
-        <td><input type="number" min="1" max="100" value="${ev.ponderacion}" data-id="${ev.id}" class="pondInput" /></td>
-        <td>${ev.fecha || '-'}</td>
-        <td><input type="text" class="tituloInput" value="${ev.titulo || ''}" data-id="${ev.id}" /></td>
-        <td><button onclick="eliminarEvaluacion(${ev.id})" style="color:red;">❌</button></td>
-      `;
-
-      html += `</table><br/>
-        <button id="btnGuardarCambios" class="btn-primary">Guardar Cambios</button>`;
-
-      contenidoPrincipal.innerHTML = html;
-
-      document.getElementById("btnGuardarCambios").addEventListener("click", guardarCambiosEvaluaciones);
-    })
-    .catch(() => {
-      contenidoPrincipal.innerHTML = `<p>Error al cargar evaluaciones.</p>`;
-    });*/
 
     function verEvaluacionesRegistradas(cursoId) {
       // Guarda el cursoId para futuras acciones como eliminar
@@ -1058,16 +741,7 @@ function mostrarNotasCurso(cursoId) {
             return;
           }
 
-          /*let html = `<h3>Evaluaciones Registradas</h3>`;
-          html += `<table border="1"><tr>
-            <th style="display:none;">ID</th>
-            <th>Estudiante</th>
-            <th>Nota</th>
-            <th>Ponderación (%)</th>
-            <th>Fecha</th>
-            <th>Título</th>
-            <th>Eliminar</th>
-          </tr>`;*/
+
           //cambie esto ojo es para poder seleccionar un alumno de un menu seleccionable
           let html = `<h3>Evaluaciones Registradas</h3>`;
 
@@ -1092,18 +766,6 @@ function mostrarNotasCurso(cursoId) {
           </tr>`;
 
 
-          /*// ✅ Aquí va el forEach completo
-          evaluaciones.forEach(ev => {
-            html += `<tr data-est-id="${ev.estudianteId}">
-              <td style="display:none;">${ev.id}</td>
-              <td>${ev.estudianteNombre || 'Desconocido'}</td>
-              <td><input type="number" step="0.1" min="1" max="7" value="${ev.nota}" data-id="${ev.id}" class="notaInput" /></td>
-              <td><input type="number" min="1" max="100" value="${ev.ponderacion}" data-id="${ev.id}" class="pondInput" /></td>
-              <td>${ev.fecha || '-'}</td>
-              <td><input type="text" class="tituloInput" value="${ev.titulo || ''}" data-id="${ev.id}" /></td>
-              <td><button onclick="eliminarEvaluacion(${ev.id})" style="color:red;">❌</button></td>
-            </tr>`;
-          });*/
 
 
           evaluaciones.sort((a, b) => {
@@ -1127,14 +789,7 @@ function mostrarNotasCurso(cursoId) {
           </tr>`;
         });
 
-          /*html += `
-          <label for="selectAlumno"><strong>Alumno:</strong></label>
-          <select id="selectAlumno">
-            <option value="">-- Seleccionar --</option>
-          </select>
-          <span style="margin-left: 20px;"><strong>Nota Final:</strong> <span id="notaFinal">-</span></span>
-          <br/><br/>
-        `;*/
+
 
 
 
@@ -1160,28 +815,7 @@ function mostrarNotasCurso(cursoId) {
             selectAlumno.appendChild(option);
           });
 
-                    // Paso 3: Evento para filtrar por estudiante
-          /*selectAlumno.addEventListener("change", () => {
-            const idSeleccionado = selectAlumno.value;
-            const filas = document.querySelectorAll("table tr[data-estudiante-id]");
 
-            filas.forEach(fila => {
-              const idEst = fila.getAttribute("data-estudiante-id");
-              fila.style.display = idEst === idSeleccionado ? "" : "none";
-            });
-
-            // Calcular y mostrar nota final
-            const evaluacionesFiltradas = evaluaciones.filter(ev => ev.estudianteId == idSeleccionado);
-            let suma = 0;
-            let totalPonderacion = 0;
-            evaluacionesFiltradas.forEach(ev => {
-              suma += ev.nota * (ev.ponderacion / 100);
-              totalPonderacion += ev.ponderacion;
-            });
-
-            const notaFinal = totalPonderacion > 0 ? suma.toFixed(2) : "-";
-            document.getElementById("notaFinal").textContent = notaFinal;
-          });*/
 
           // Paso 3: Evento para filtrar por estudiante
           selectAlumno.addEventListener("change", () => {
@@ -1228,19 +862,6 @@ function mostrarNotasCurso(cursoId) {
 
 
 
-/*function eliminarEvaluacion(id) {
-  if (confirm("¿Estás seguro de que quieres eliminar esta evaluación?")) {
-    fetch(`http://localhost:8080/api/evaluaciones/${id}`, {
-      method: "DELETE"
-    })
-      .then(res => {
-        if (!res.ok) throw new Error("Error al eliminar");
-        alert("Evaluación eliminada correctamente.");
-        verEvaluacionesRegistradas(localStorage.getItem("cursoSeleccionado")); // recarga lista sin refresh
-      })
-      .catch(() => alert("No se pudo eliminar la evaluación."));
-  }
-}*/
 
 function eliminarEvaluacion(id) {
   if (confirm("¿Estás seguro de que quieres eliminar esta evaluación?")) {
@@ -1261,147 +882,6 @@ function eliminarEvaluacion(id) {
 
 
 
-/*function guardarCambiosEvaluaciones() {
-  const inputsNota = document.querySelectorAll(".notaInput");
-  const inputsPond = document.querySelectorAll(".pondInput");
-  const inputsTitulo = document.querySelectorAll(".tituloInput");
-  const actualizaciones = [];
-
-  inputsNota.forEach((notaInput, i) => {
-    const id = notaInput.getAttribute("data-id");
-    const nota = parseFloat(notaInput.value);
-    const ponderacion = parseFloat(inputsPond[i].value);
-    const titulo = inputsTitulo[i].value;
-    actualizaciones.push({ id, nota, ponderacion,titulo });
-  });
-
-  fetch("http://localhost:8080/api/evaluaciones/actualizar", {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(actualizaciones)
-  })
-    .then(res => {
-      if (!res.ok) throw new Error("Error actualizando");
-      alert("Evaluaciones actualizadas correctamente.");
-    })
-    .catch(() => alert("No se pudo actualizar."));
-}*/
-
-/*function guardarCambiosEvaluaciones() {
-  const notas = document.querySelectorAll(".notaInput");
-  const ponderaciones = document.querySelectorAll(".pondInput");
-  const titulos = document.querySelectorAll(".tituloInput");
-
-  const actualizaciones = [];
-
-  notas.forEach((inputNota, i) => {
-    const id = inputNota.getAttribute("data-id");  // se toma desde el atributo de cada input
-    const nota = parseFloat(inputNota.value);
-    const ponderacion = parseFloat(ponderaciones[i].value);
-    const titulo = titulos[i].value;
-
-    actualizaciones.push({
-      id,
-      nota,
-      ponderacion,
-      titulo
-    });
-  });
-
-  // Enviar al backend
-  fetch("http://localhost:8080/api/evaluaciones/actualizar", {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(actualizaciones)
-  })
-    .then(res => {
-      if (!res.ok) throw new Error("Error al actualizar");
-      alert("Evaluaciones actualizadas correctamente.");
-    })
-    .catch(() => alert("No se pudo actualizar."));
-}*/
-
-/*function guardarCambiosEvaluaciones() {
-  const notas = document.querySelectorAll(".notaInput");
-  const ponderaciones = document.querySelectorAll(".pondInput");
-  const titulos = document.querySelectorAll(".tituloInput");
-
-  const actualizaciones = [];
-
-  notas.forEach((inputNota, i) => {
-    const id = inputNota.getAttribute("data-id");
-    const nota = parseFloat(inputNota.value);
-    const ponderacion = parseFloat(ponderaciones[i].value);
-    const titulo = titulos[i].value;
-
-    // 👇 Obtener el estudianteId desde la fila <tr data-est-id="...">
-    const tr = inputNota.closest("tr");
-    const estudianteId = parseInt(tr.getAttribute("data-est-id"));
-    const cursoId = parseInt(localStorage.getItem("cursoSeleccionado")); // obtenido de memoria local
-
-    actualizaciones.push({
-      id,
-      nota,
-      ponderacion,
-      titulo,
-      estudiante: { id: estudianteId },
-      curso: { id: cursoId }
-    });
-  });
-
-  fetch("http://localhost:8080/api/evaluaciones/actualizar", {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(actualizaciones)
-  })
-    .then(res => {
-      if (!res.ok) throw new Error("Error al actualizar");
-      alert("Evaluaciones actualizadas correctamente.");
-    })
-    .catch(() => alert("No se pudo actualizar.");
-}*/
-/*function guardarCambiosEvaluaciones() {
-  const filas = document.querySelectorAll("table tr[data-estudiante-id]");
-  const actualizaciones = [];
-  const cursoId = localStorage.getItem("cursoSeleccionado");
-
-
-  filas.forEach(fila => {
-    const idEvaluacion = fila.querySelector(".notaInput")?.getAttribute("data-id");
-    const nota = parseFloat(fila.querySelector(".notaInput")?.value.replace(',', '.'));
-    const ponderacion = parseFloat(fila.querySelector(".pondInput")?.value.replace(',', '.'));
-
-    const titulo = fila.querySelector(".tituloInput")?.value;
-    const estudianteId = fila.getAttribute("data-estudiante-id");
-
-    if (idEvaluacion && !isNaN(nota) && !isNaN(ponderacion)) {
-      actualizaciones.push({
-        id: idEvaluacion,
-        nota,
-        ponderacion,
-        titulo,
-        estudiante: { id: estudianteId },  // 👈 Incluye el estudiante aquí
-        curso: { id: cursoId }
-      });
-    }
-  });
-
-  console.log("📤 Enviando actualizaciones:");
-  console.table(actualizaciones);
-  console.log("Actualizaciones a enviar:", actualizaciones);
-
-  fetch("http://localhost:8080/api/evaluaciones/actualizar", {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(actualizaciones)
-  })
-    .then(res => {
-      if (!res.ok) throw new Error("Error al actualizar");
-      alert("Evaluaciones actualizadas correctamente.");
-      verEvaluacionesRegistradas(localStorage.getItem("cursoSeleccionado")); // recarga
-    })
-    .catch(() => alert("No se pudo actualizar."));
-}*/
 function guardarCambiosEvaluaciones() {
   const cursoId = localStorage.getItem("cursoSeleccionado");
   const filas = document.querySelectorAll("table tr[data-estudiante-id]");
